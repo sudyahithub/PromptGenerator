@@ -686,13 +686,14 @@ document.addEventListener('keydown', function (e) {
 });
 
 document.addEventListener('keydown', function (e) {
-  if (e.key === 'Delete') {
+  if ((e.key === 'Delete' && !e.ctrlKey) || (e.key === 'Delete' && e.ctrlKey)) {
     const selected = document.querySelector('.preview-image-wrapper.selected-image');
     if (selected) {
       selected.remove();
     }
   }
 });
+
 
   
   </script>
