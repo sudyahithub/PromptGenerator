@@ -130,16 +130,7 @@
   transition: transform 0.05s ease-out;
 }
 
-.preview-image-wrapper {
-  position: absolute;
-  border: 1px solid #555;
-  background: #111;
-  border-radius: 4px;
-  overflow: hidden;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.6);
-  resize: both;
-  overflow: auto;
-}
+
 
 .preview-image-wrapper.selected {
   /* outline: 3px solid #4ecdc4; */
@@ -147,15 +138,51 @@
   outline-offset: -2px;
 }
 
+.preview-box.dragover {
+  border: 2px dashed #6cb2eb;
+}
+
+.preview-image-wrapper {
+  position: absolute;
+  border: 1px solid #555;
+  background: #111;
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.6);
+}
 
 .preview-image-wrapper img {
-  display: block;
   width: 100%;
   height: 100%;
   object-fit: contain;
-  user-select: none;
   pointer-events: none;
+  user-select: none;
 }
+
+.preview-image-wrapper {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  right: 0;
+  bottom: 0;
+  background: white;
+  border: 1px solid #999;
+  cursor: nwse-resize;
+  z-index: 10;
+}
+
+.resizer {
+      position: absolute;
+      width: 16px;
+      height: 16px;
+      right: 0;
+      bottom: 0;
+      background: white;
+      border: 2px solid #888;
+      cursor: nwse-resize;
+      z-index: 10;
+    }
+
 .selected-image {
   outline: 3px solid #6cb2eb;
 }
@@ -403,6 +430,16 @@ function makeDraggable(wrapper) {
   let isDragging = false;
   let offsetX, offsetY;
 
+
+
+  
+
+
+
+
+
+
+
   // Allow drag
   wrapper.addEventListener('mousedown', function (e) {
     if (e.target.tagName === 'TEXTAREA' || e.target.classList.contains('delete-btn')) return;
@@ -524,8 +561,11 @@ document.addEventListener('paste', async (event) => {
       reader.onload = function (e) {
         const wrapper = document.createElement('div');
         wrapper.className = 'preview-image-wrapper';
-        wrapper.style.width = '200px';
-        wrapper.style.height = '200px';
+        img.onload = () => {
+  wrapper.style.width = img.naturalWidth + 'px';
+  wrapper.style.height = img.naturalHeight + 'px';
+};
+
         wrapper.style.left = `${Math.random() * 600}px`;
         wrapper.style.top = `${Math.random() * 300}px`;
 
@@ -729,6 +769,177 @@ document.addEventListener('keydown', function (e) {
     document.querySelectorAll('.preview-image-wrapper.selected').forEach(el => el.remove());
   }
 });
+
+
+
+
+
+
+
+
+// Prevent default behavior for drag events
+['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+  previewBox.addEventListener(eventName, e => {
+    e.preventDefault();
+    e.stopPropagation();
+  }, false);
+});
+
+// Optional: show border when dragging over
+previewBox.addEventListener('dragover', () => {
+  previewBox.classList.add('dragover');
+});
+previewBox.addEventListener('dragleave', () => {
+  previewBox.classList.remove('dragover');
+});
+previewBox.addEventListener('drop', e => {
+  previewBox.classList.remove('dragover');
+
+  const files = Array.from(e.dataTransfer.files || []);
+  const items = Array.from(e.dataTransfer.items || []);
+
+  // 1. Handle local image files
+  files.forEach(file => {
+    if (file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onload = function (ev) {
+        createMoodboardImage(ev.target.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  });
+
+  // 2. Handle image URLs dragged from web
+  items.forEach(item => {
+    if (item.kind === 'string' && item.type === 'text/uri-list') {
+      item.getAsString(url => {
+        if (url.match(/\.(jpeg|jpg|png|gif|webp|svg)$/i)) {
+          createMoodboardImage(url);
+        }
+      });
+    }
+  });
+});
+
+
+function addImageToCanvas(src) {
+  const wrapper = document.createElement('div');
+  wrapper.className = 'preview-image-wrapper';
+  const img = document.createElement('img');
+  img.src = src;
+
+  img.onload = () => {
+    wrapper.style.width = img.naturalWidth + 'px';
+    wrapper.style.height = img.naturalHeight + 'px';
+  };
+
+  wrapper.style.left = `${Math.random() * 600}px`;
+  wrapper.style.top = `${Math.random() * 300}px`;
+
+  wrapper.appendChild(img);
+  canvas.appendChild(wrapper);
+  makeDraggable(wrapper);
+}
+
+
+
+document.addEventListener('paste', async (event) => {
+  const items = event.clipboardData?.items || [];
+
+  for (const item of items) {
+    // Handle image blobs (from file copy)
+    if (item.type.startsWith('image/')) {
+      const blob = item.getAsFile();
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        addImageToCanvas(e.target.result);
+      };
+      reader.readAsDataURL(blob);
+      event.preventDefault();
+      return;
+    }
+
+    // Handle pasted image URLs (e.g. from right-click > copy image on websites)
+    if (item.type === 'text/html') {
+      item.getAsString((html) => {
+        const match = html.match(/<img[^>]+src="([^">]+)"/);
+        if (match && match[1]) {
+          addImageToCanvas(match[1]);
+        }
+      });
+      event.preventDefault();
+      return;
+    }
+
+    // Fallback: plain text with direct URL
+    if (item.type === 'text/plain') {
+      item.getAsString((url) => {
+        if (url.match(/\.(jpeg|jpg|png|gif|webp)$/i)) {
+          addImageToCanvas(url);
+        }
+      });
+      event.preventDefault();
+      return;
+    }
+  }
+});
+
+
+function createMoodboardImage(src) {
+  const wrapper = document.createElement('div');
+  wrapper.className = 'preview-image-wrapper';
+  wrapper.style.left = `${Math.random() * 600}px`;
+  wrapper.style.top = `${Math.random() * 300}px`;
+
+  const img = new Image();
+  img.onload = () => {
+    wrapper.style.width = img.naturalWidth + 'px';
+    wrapper.style.height = img.naturalHeight + 'px';
+  };
+  img.src = src;
+
+  wrapper.appendChild(img);
+
+  // Add custom resizer
+  const resizer = document.createElement('div');
+  resizer.className = 'resizer';
+  wrapper.appendChild(resizer);
+
+  makeDraggable(wrapper);
+  makeResizable(wrapper, resizer);
+  canvas.appendChild(wrapper);
+}
+
+function makeResizable(wrapper, handle) {
+  let isResizing = false;
+  let startX, startY, startWidth, startHeight;
+
+  handle.addEventListener('mousedown', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    isResizing = true;
+    startX = e.clientX;
+    startY = e.clientY;
+    startWidth = wrapper.offsetWidth;
+    startHeight = wrapper.offsetHeight;
+    document.body.style.cursor = 'nwse-resize';
+  });
+
+  document.addEventListener('mousemove', (e) => {
+    if (!isResizing) return;
+    const dx = e.clientX - startX;
+    const dy = e.clientY - startY;
+    wrapper.style.width = (startWidth + dx) + 'px';
+    wrapper.style.height = (startHeight + dy) + 'px';
+  });
+
+  document.addEventListener('mouseup', () => {
+    if (isResizing) {
+      isResizing = false;
+      document.body.style.cursor = '';
+    }
+  });
+}
 
 
 
