@@ -141,6 +141,13 @@
   overflow: auto;
 }
 
+.preview-image-wrapper.selected {
+  /* outline: 3px solid #4ecdc4; */
+  outline: 3px solid #6cb2eb;
+  outline-offset: -2px;
+}
+
+
 .preview-image-wrapper img {
   display: block;
   width: 100%;
@@ -392,35 +399,67 @@
 }
 
   
-    function makeDraggable(el) {
-      let isDragging = false;
-      let offsetX, offsetY;
-  
-      el.addEventListener('mousedown', function (e) {
-        if (e.target.tagName === 'TEXTAREA') return;
-        isDragging = true;
-        el.style.zIndex = 1000;
-        offsetX = e.clientX - el.offsetLeft;
-        offsetY = e.clientY - el.offsetTop;
-        e.stopPropagation();
-      });
-  
-      document.addEventListener('mousemove', function (e) {
-        if (!isDragging) return;
-        el.style.left = `${e.clientX - offsetX}px`;
-        el.style.top = `${e.clientY - offsetY}px`;
-      });
-  
-      document.addEventListener('mouseup', function () {
-        isDragging = false;
-        el.style.zIndex = '';
-      });
-  
-      el.addEventListener('contextmenu', e => {
-        e.preventDefault();
-        if (confirm("Remove this image?")) el.remove();
+function makeDraggable(wrapper) {
+  let isDragging = false;
+  let offsetX, offsetY;
+
+  // Allow drag
+  wrapper.addEventListener('mousedown', function (e) {
+    if (e.target.tagName === 'TEXTAREA' || e.target.classList.contains('delete-btn')) return;
+
+    // For selection logic
+    const all = Array.from(document.querySelectorAll('.preview-image-wrapper'));
+
+    // Ctrl/Cmd → toggle selection
+    if (e.ctrlKey || e.metaKey) {
+      wrapper.classList.toggle('selected');
+      lastSelectedWrapper = wrapper;
+    }
+    // Shift → range selection
+    else if (e.shiftKey && lastSelectedWrapper) {
+      const start = all.indexOf(lastSelectedWrapper);
+      const end = all.indexOf(wrapper);
+      const [min, max] = [Math.min(start, end), Math.max(start, end)];
+      all.forEach((el, i) => {
+        if (i >= min && i <= max) el.classList.add('selected');
       });
     }
+    // Regular click → single selection
+    else {
+      all.forEach(el => el.classList.remove('selected'));
+      wrapper.classList.add('selected');
+      lastSelectedWrapper = wrapper;
+    }
+
+    // Enable drag
+    isDragging = true;
+    offsetX = e.clientX - wrapper.offsetLeft;
+    offsetY = e.clientY - wrapper.offsetTop;
+    wrapper.style.zIndex = 1000;
+    e.stopPropagation();
+  });
+
+  document.addEventListener('mousemove', function (e) {
+    if (!isDragging) return;
+    const selectedWrappers = document.querySelectorAll('.preview-image-wrapper.selected');
+    selectedWrappers.forEach(el => {
+      el.style.left = `${e.clientX - offsetX}px`;
+      el.style.top = `${e.clientY - offsetY}px`;
+    });
+  });
+
+  document.addEventListener('mouseup', function () {
+    isDragging = false;
+    wrapper.style.zIndex = '';
+  });
+
+  // Right-click to remove
+  wrapper.addEventListener('contextmenu', e => {
+    e.preventDefault();
+    if (confirm("Remove this image?")) wrapper.remove();
+  });
+}
+
   
     const previewBox = document.getElementById('previewBox');
     previewBox.addEventListener('wheel', function(e) {
@@ -686,17 +725,16 @@ document.addEventListener('keydown', function (e) {
 });
 
 document.addEventListener('keydown', function (e) {
-  if ((e.key === 'Delete' && !e.ctrlKey) || (e.key === 'Delete' && e.ctrlKey)) {
-    const selected = document.querySelector('.preview-image-wrapper.selected-image');
-    if (selected) {
-      selected.remove();
-    }
+  if (e.key === 'Delete') {
+    document.querySelectorAll('.preview-image-wrapper.selected').forEach(el => el.remove());
   }
 });
 
 
+
   
   </script>
+
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
 
