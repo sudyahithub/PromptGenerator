@@ -149,6 +149,9 @@
   user-select: none;
   pointer-events: none;
 }
+.selected-image {
+  outline: 3px solid #6cb2eb;
+}
 
 
     .moodboard {
@@ -377,6 +380,12 @@
       wrapper.appendChild(img);
       canvas.appendChild(wrapper);
       makeDraggable(wrapper);
+      wrapper.addEventListener('click', function (e) {
+  document.querySelectorAll('.preview-image-wrapper').forEach(el => el.classList.remove('selected-image'));
+  wrapper.classList.add('selected-image');
+  e.stopPropagation(); // prevent triggering drag
+});
+
     };
     reader.readAsDataURL(file);
   });
@@ -673,6 +682,15 @@ async function handleSearch(selectElement, context) {
 document.addEventListener('keydown', function (e) {
   if (e.key === 'f' || e.key === 'F') {
     focusMoodboardOnContent();
+  }
+});
+
+document.addEventListener('keydown', function (e) {
+  if (e.key === 'Delete') {
+    const selected = document.querySelector('.preview-image-wrapper.selected-image');
+    if (selected) {
+      selected.remove();
+    }
   }
 });
 
