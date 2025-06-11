@@ -345,7 +345,10 @@ z-index: 10;
 <div class="container">
     <div class="scrollable-form">
         <div class="form-section">
-          <div class="form-group"><label for="officeSpaceType">Office Space Type</label><select id="officeSpaceType" multiple onchange="handleSearch(this, 'office type'); updateLabels(); updatePinterestQuery();"></select></div>
+          <div class="form-group"><label for="officeSpaceType">Office Space Type</label><select id="officeSpaceType" multiple
+  onchange="moveSelectedOptionsToTop('officeSpaceType'); handleSearch(this, 'office type'); updateLabels(); updatePinterestQuery();">
+</select>
+</div>
           <div class="form-group"><label for="intendedUse">Intended Use</label><select id="intendedUse" multiple onchange="handleSearch(this, 'office use case'); updateLabels()"></select></div>
           <div class="form-group"><label for="designStyle">Design Style</label><select id="designStyle" multiple onchange="handleSearch(this, 'interior office style'); updateLabels(); updatePinterestQuery();"></select></div>
           <div class="form-group"><label for="people">Number of People</label><select id="people" onchange="updateLabels()">
@@ -358,6 +361,7 @@ z-index: 10;
           <div class="form-group"><label for="accentColors">Accent Colors</label><select id="accentColors" multiple onchange="handleSearch(this, 'interior accent colors'); updateLabels()"></select></div>
           <div class="form-group"><label for="lightingType">Lighting Type</label><select id="lightingType" multiple onchange="handleSearch(this, 'lighting design office'); updateLabels(); updatePinterestQuery();"></select></div>
           <div class="form-group"><label for="lightingElements">Lighting Elements</label><select id="lightingElements" multiple onchange="handleSearch(this, 'lighting fixtures'); updateLabels()"></select></div>
+          <div class="form-group"><label for="FlooringType">Flooring Type</label><select id="flooringType" multiple onchange="handleSearch(this, 'Flooring Type'); updateLabels(); updatePinterestQuery();"></select></div>
         </div>
       </div>
       <div class="output-section">
@@ -422,16 +426,74 @@ z-index: 10;
 
 <script>
 
+function moveSelectedOptionsToTop(select) {
+  if (!select || !select.multiple) return;
+
+  const selectedOptions = Array.from(select.selectedOptions);
+  const unselectedOptions = Array.from(select.options).filter(opt => !opt.selected);
+
+  // Clear and reorder
+  select.innerHTML = '';
+  selectedOptions.forEach(opt => {
+    const newOpt = new Option(opt.text, opt.value, false, true);
+    select.appendChild(newOpt);
+  });
+  unselectedOptions.forEach(opt => {
+    const newOpt = new Option(opt.text, opt.value);
+    select.appendChild(newOpt);
+  });
+
+  select.scrollTop = 0;
+}
+
+document.querySelectorAll('select[multiple]').forEach(select => {
+  select.addEventListener('change', function () {
+    moveSelectedOptionsToTop(this);
+  });
+});
+
+
+
+
+
+
   function openInChatGPT() {
   const prompt = document.getElementById('finalPrompt').value.trim();
-  if (!prompt) {
-    alert("Prompt is empty!");
+  const imageWrappers = document.querySelectorAll('#canvas .preview-image-wrapper');
+
+  const labelled = Array.from(imageWrappers).filter(wrapper =>
+    wrapper.hasAttribute('data-label')
+  );
+
+  if (!prompt && labelled.length === 0) {
+    alert("Nothing to send!");
     return;
   }
-  const encodedPrompt = encodeURIComponent(prompt);
-  const chatURL = `https://chat.openai.com/?model=text-davinci-003&prompt=${encodedPrompt}`;
-  window.open(chatURL, '_blank');
+
+  let imageMarkdown = '';
+
+  labelled.forEach((wrapper, index) => {
+    const label = wrapper.getAttribute('data-label') || `Image ${index + 1}`;
+    const img = wrapper.querySelector('img');
+    const src = img?.src || '';
+
+    // Include only if image is from URL or dataURL (base64)
+    if (src.startsWith('data:image') || src.startsWith('http')) {
+      imageMarkdown += `\n\n**${label}**\n\n![](${src})`;
+    }
+  });
+
+  const combined = [
+    prompt,
+    '',
+    '### Labelled Moodboard Images:',
+    imageMarkdown || '(No labelled images found)'
+  ].join('\n');
+
+  const url = `https://chat.openai.com/chat?prompt=${encodeURIComponent(combined)}`;
+  window.open(url, '_blank');
 }
+
 
 
 
@@ -455,7 +517,7 @@ function updatePreviewPlaceholder() {
     fetch(sheetURL).then(res => res.text()).then(csv => {
       const parsed = Papa.parse(csv, { header: true });
       const data = parsed.data;
-      const keys = ['Office Space Type', 'IntendedUse', 'DesignStyle', 'Materials', 'AccentMaterials', 'PrimaryColor', 'AccentColors', 'LightingType', 'LightingElements'];
+      const keys = ['Office Space Type', 'IntendedUse', 'DesignStyle', 'Materials', 'AccentMaterials', 'PrimaryColor', 'AccentColors', 'LightingType', 'LightingElements', 'FlooringType'];
       keys.forEach(key => {
         const id = key.replace(/\s+/g, '').charAt(0).toLowerCase() + key.replace(/\s+/g, '').slice(1);
         const unique = [...new Set(data.map(row => row[key]).filter(v => v && v.trim() !== ""))];
@@ -483,7 +545,8 @@ function updatePreviewPlaceholder() {
     const accentColors = getMultiSelect('accentColors');
     const lightingType = getMultiSelect('lightingType');
     const lightingElements = getMultiSelect('lightingElements');
-  
+    const FlooringType = getMultiSelect('FlooringType');
+
     const promptParts = [];
     const intro = [];
     if (officeType.length) intro.push(`of a ${officeType.join(', ')} zone`);
@@ -868,21 +931,30 @@ async function handleSearch(selectElement, context) {
   }
   
   function updateLabels() {
-    const keys = ['officeSpaceType','intendedUse','designStyle','people','furniture','materials','accentMaterials','primaryColor','accentColors','lightingType','lightingElements'];
-    const labelsBox = document.getElementById('labelsBox');
-    labelsBox.innerHTML = '';
-    keys.forEach(id => {
-      const el = document.getElementById(id);
-      const values = el.tagName === 'SELECT' && el.multiple ? getMultiSelect(id) : [el.value];
-      values.forEach(val => {
-        if (val && val.trim()) {
-          const span = document.createElement('span');
-          span.className = 'label-tag label-' + id;
-          span.innerHTML = `${val}<span class="remove" onclick="removeLabel('${id}', '${val}')">×</span>`;
-          labelsBox.appendChild(span);
-        }
-      });
-    });
+  const keys =
+  ['officeSpaceType','intendedUse','designStyle','people','furniture','materials','accentMaterials','primaryColor','accentColors','lightingType','lightingElements'];
+  const labelsBox = document.getElementById('labelsBox');
+  labelsBox.innerHTML = '';
+  keys.forEach(id => {
+  const el = document.getElementById(id);
+  let values = [];
+
+  if (el.tagName === 'SELECT' && el.multiple) {
+  values = Array.from(el.selectedOptions).map(opt => opt.value); // ordered
+  } else {
+  values = [el.value];
+  }
+
+  values.forEach(val => {
+  if (val && val.trim()) {
+  const span = document.createElement('span');
+  span.className = 'label-tag label-' + id;
+  span.innerHTML = `${val}<span class="remove" onclick="removeLabel('${id}', '${val}')">×</span>`;
+  labelsBox.appendChild(span);
+  }
+  });
+  });
+
   }
   
   // function removeLabel(id, value) {
