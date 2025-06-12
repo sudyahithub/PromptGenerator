@@ -368,7 +368,11 @@ z-index: 10;
         <div class="button-row">
           <!-- <button onclick="generatePrompt()">Generate Prompt</button> -->
           <!-- <button onclick="copyToClipboard()">COPY</button> -->
-          <button onclick="openInChatGPT()" style="background: #10a37f; color: white;">Open in ChatGPT</button>
+          <button onclick="exportToChatGPT()" style="margin-top: 1rem; background: #10a37f; color: white; padding: 0.5rem 1rem; border-radius: 6px;">
+  Open in ChatGPT
+</button>
+
+
 
         </div>
         <textarea class="output" id="finalPrompt"></textarea>
@@ -426,6 +430,79 @@ z-index: 10;
 
 <script>
 
+
+
+  function getLabelledImages() {
+  return Array.from(document.querySelectorAll('.preview-image-wrapper')).map(wrapper => {
+    const img = wrapper.querySelector('img');
+    const label = wrapper.querySelector('.image-label')?.innerText?.trim();
+    if (img && label) {
+      return { label, file: dataURLtoFile(img.src, `${label}.png`) };
+    }
+    return null;
+  }).filter(Boolean);
+}
+
+function dataURLtoFile(dataurl, filename) {
+  const arr = dataurl.split(',');
+  const mime = arr[0].match(/:(.*?);/)[1];
+  const bstr = atob(arr[1]);
+  let n = bstr.length;
+  const u8arr = new Uint8Array(n);
+  while (n--) u8arr[n] = bstr.charCodeAt(n);
+  return new File([u8arr], filename, { type: mime });
+}
+
+
+
+
+
+  async function exportToChatGPT() {
+  const prompt = document.getElementById('finalPrompt').value;
+  const wrappers = document.querySelectorAll('.preview-image-wrapper');
+
+  const labelled = Array.from(wrappers)
+    .filter(wrapper => wrapper.querySelector('.image-label') && wrapper.querySelector('img'))
+    .map(wrapper => {
+      const label = wrapper.querySelector('.image-label').textContent.trim();
+      const img = wrapper.querySelector('img');
+      const base64 = img.src.split(',')[1]; // Extract base64 only
+      return { label, base64 };
+    });
+
+  if (labelled.length === 0) {
+    alert("No labelled images found.");
+    return;
+  }
+
+  const uploads = await Promise.all(labelled.map(async ({ label, base64 }) => {
+    try {
+      const res = await fetch("https://api.imgbb.com/1/upload", {
+        method: "POST",
+        body: new URLSearchParams({
+          key: "e4440d61f8e0b97bfe979bf8995476c2", // your API key
+          image: base64
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        const url = data.data.url;
+        return `\n ${label} :${url}`;
+      } else {
+        return `**${label}**: (upload failed)`;
+      }
+    } catch (e) {
+      return `**${label}**: (upload error)`;
+    }
+  }));
+
+  const combinedPrompt = `${prompt}\n\n${uploads.join("\n\n")}`;
+  const chatGPTURL = `https://chat.openai.com/?prompt=${encodeURIComponent(combinedPrompt)}`;
+  window.open(chatGPTURL, "_blank");
+}
+
+
+
 function moveSelectedOptionsToTop(select) {
   if (!select || !select.multiple) return;
 
@@ -459,41 +536,14 @@ document.querySelectorAll('select[multiple]').forEach(select => {
 
   function openInChatGPT() {
   const prompt = document.getElementById('finalPrompt').value.trim();
-  const imageWrappers = document.querySelectorAll('#canvas .preview-image-wrapper');
-
-  const labelled = Array.from(imageWrappers).filter(wrapper =>
-    wrapper.hasAttribute('data-label')
-  );
-
-  if (!prompt && labelled.length === 0) {
-    alert("Nothing to send!");
+  if (!prompt) {
+    alert("Prompt is empty!");
     return;
   }
-
-  let imageMarkdown = '';
-
-  labelled.forEach((wrapper, index) => {
-    const label = wrapper.getAttribute('data-label') || `Image ${index + 1}`;
-    const img = wrapper.querySelector('img');
-    const src = img?.src || '';
-
-    // Include only if image is from URL or dataURL (base64)
-    if (src.startsWith('data:image') || src.startsWith('http')) {
-      imageMarkdown += `\n\n**${label}**\n\n![](${src})`;
-    }
-  });
-
-  const combined = [
-    prompt,
-    '',
-    '### Labelled Moodboard Images:',
-    imageMarkdown || '(No labelled images found)'
-  ].join('\n');
-
-  const url = `https://chat.openai.com/chat?prompt=${encodeURIComponent(combined)}`;
-  window.open(url, '_blank');
+  const encodedPrompt = encodeURIComponent(prompt);
+  const chatURL = `https://chat.openai.com/?model=text-davinci-003&prompt=${encodedPrompt}`;
+  window.open(chatURL, '_blank');
 }
-
 
 
 
