@@ -1,1297 +1,1969 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Photorealistic Office Render Prompt Builder</title>
-  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.2/papaparse.min.js"></script>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      font-size: 18px;
-      padding: 1rem;
-      background-color: #111;
-      color: white;
-      overflow: hidden;
-    }
-    .container {
-      display: flex;
-      align-items: flex-start;
-      flex-wrap: nowrap;
-      height: 99vh;
-      overflow: hidden;
-    }
-    .scrollable-form {
-    padding: 1rem 0;
-    max-height: 99vh;
-    overflow-y: auto;
-    flex: 0 0 35%;
-    padding-right: 0.5rem; /* ✅ Reduce padding */
-    margin-right: 0; /* ✅ No extra margin */
-    box-sizing: border-box; /* ✅ Ensures padding doesn't add to width */
-    }
-    
-    /* Scrollbar */
+  <!DOCTYPE html>
+  <html lang="en">
+  <head>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Photorealistic Office Render Prompt Builder</title>
+    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.2/papaparse.min.js"></script>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        font-size: 18px;
+        padding: 1rem;
+        background-color: #111;
+        color: white;
+        overflow: hidden;
+      }
 
+  .container {
+    display: flex;
+    height: 100vh;
+    width: 100vw;
+    overflow: hidden;
+  }
 
-    /* Applies to all scrollbars in WebKit-based browsers */
-    ::-webkit-scrollbar {
-      width: 10px;
-      height: 10px;
-    }
-
-    ::-webkit-scrollbar-track {
-      background-color: #1a1a1a;
-      border-radius: 10px;
-    }
-
-    ::-webkit-scrollbar-thumb {
-      background-color: #555;
-      border-radius: 10px;
-      border: 2px solid #1a1a1a; /* creates spacing around thumb */
-      transition: background-color 0.3s ease;
-    }
-
-    ::-webkit-scrollbar-thumb:hover {
-      background-color: #888;
-    }
-
-    /* Optional: Fade into background */
-    ::-webkit-scrollbar-corner {
-      background-color: transparent;
-    }
-
-
-    .form-section {
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-      width: 100%;
-    }
-    /* .form-group {
-      background: #222;
-      padding: 1rem;
-      border-radius: 10px;
-      max-height: 150px;
+  .scrollable-form {
+      padding: 1rem 0;
+      max-height: 99vh;
       overflow-y: auto;
-      border: 1px solid #444;
-    } */
+      flex: 0 0 35%;
+      padding-right: 0.5rem; /* ✅ Reduce padding */
+      margin-right: 0; /* ✅ No extra margin */
+      box-sizing: border-box; /* ✅ Ensures padding doesn't add to width */
+      max-width: 20%;
+      }
+
+      .form-group textarea{
+        max-width: 95%;
+      }
+      
+
+      
+      /* Scrollbar */
 
 
-    .form-group {
-    margin: 0;
-    padding: 0rem 0; /* Reduce vertical spacing */
-    border: none; /* Optional: remove inner borders */
-    background: none; /* Optional: make background flat */
-    }
+      /* Applies to all scrollbars in WebKit-based browsers */
+      ::-webkit-scrollbar {
+        width: 10px;
+        height: 10px;
+      }
+
+      ::-webkit-scrollbar-track {
+        background-color: #1a1a1a;
+        border-radius: 10px;
+      }
+
+      ::-webkit-scrollbar-thumb {
+        background-color: #555;
+        border-radius: 10px;
+        border: 2px solid #1a1a1a; /* creates spacing around thumb */
+        transition: background-color 0.3s ease;
+      }
+
+      ::-webkit-scrollbar-thumb:hover {
+        background-color: #888;
+      }
+
+      /* Optional: Fade into background */
+      ::-webkit-scrollbar-corner {
+        background-color: transparent;
+      }
 
 
-
-    label {
-      font-weight: bold;
-      margin-bottom: 0.5rem;
-      display: block;
-      color: white;
-      font-size: 18px;
-    }
-    select[multiple], textarea, select, input[type="text"] {
-      width: 100%;
-      padding: 0.5rem;
-      border-radius: 5px;
-      border: 1px solid #666;
-      background: black;
-      color: white;
-      font-size: 16px;
-    }
-    .output-section {
-    background-color: #111;
-    padding: 1rem;
-    border-radius: 10px;
-    flex: 1;
-    box-sizing: border-box;
-    height: 100vh;             /* Ensures full viewport height */
-    overflow-y: auto;          /* Enables vertical scroll */
-    }
-
-    .output {
-      background: black;
-      color: white;
-      padding: 1rem;
-      border-radius: 8px;
-      font-family: monospace;
-      height: 200px;
-      overflow-y: auto;
-      border: 1px solid #666;
-      width: 100%;
-      box-sizing: border-box;
-      font-size: 16px;
-    }
-    .button-row {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 1rem;
-    }
-    button {
-      padding: 0.5rem 1.5rem;
-      border-radius: 5px;
-      font-weight: bold;
-      border: none;
-      cursor: pointer;
-    }
-    .labels-box {
-      background: #1e1e1e;
-      border: 1px solid #666;
-      margin-top: 1rem;
-      border-radius: 8px;
-      padding: 0.5rem;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.5rem;
-    }
-    .label-tag {
-      padding: 0.4rem 0.75rem;
-      border-radius: 20px;
-      font-size: 15px;
-      background-color: #666;
-      color: white;
-    }
-    .preview-box {
-      margin-top: 1rem;
-      background: black;
-      border: 1px solid #666;
-      border-radius: 8px;
-      height: 430px;
-      overflow: auto;
-      position: relative;
-      cursor: grab;
-    }
-
-.preview-canvas {
-  width: 3000px;
-  height: 3000px;
-  position: absolute;
-  top: 0;
-  left: 0;
-  transform-origin: top left;
-  transition: transform 0.05s ease-out;
-}
+      .form-section {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        width: 100%;
+      }
 
 
 
-.preview-image-wrapper.selected {
-  /* outline: 3px solid #4ecdc4; */
-  outline: 3px solid #6cb2eb;
-  outline-offset: -2px;
-}
 
-.preview-box.dragover {
-  border: 2px dashed #6cb2eb;
-}
 
-.preview-image-wrapper {
-  position: absolute;
-  border: 1px solid #555;
-  background: #111;
-  border-radius: 4px;
-  overflow: hidden;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.6);
-}
+      select[multiple], textarea, select, input[type="text"] {
+        width: 100%;
+        padding: 0.5rem;
+        border-radius: 5px;
+        border: 1px solid #666;
+        background: black;
+        color: white;
+        font-size: 16px;
+      }
+      
 
-.preview-image-wrapper img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  pointer-events: none;
-  user-select: none;
-}
 
-.preview-image-wrapper {
+
+      .button-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 1rem;
+      }
+      button {
+        padding: 0.5rem 1.5rem;
+        border-radius: 5px;
+        font-weight: bold;
+        border: none;
+        cursor: pointer;
+      }
+      
+
+
+
+      .preview-box {
+        margin-top: 1rem;
+        background: black;
+        border: 1px solid #666;
+        border-radius: 8px;
+        height: 430px;
+        overflow: auto;
+        position: relative;
+        cursor: grab;
+      }
+
+  .preview-canvas {
+    width: 3000px;
+    height: 3000px;
+    position: absolute;
+    top: 0;
+    left: 0;
+    transform-origin: top left;
+    transition: transform 0.05s ease-out;
+  }
+
+
+
+  .preview-image-wrapper.selected {
+    /* outline: 3px solid #4ecdc4; */
+    outline: 3px solid #6cb2eb;
+    outline-offset: -2px;
+  }
+
+  .preview-box.dragover {
+    border: 2px dashed #6cb2eb;
+  }
+
+  .preview-image-wrapper {
+    position: absolute;
+    border: 1px solid #555;
+    background: #111;
+    border-radius: 4px;
+    overflow: hidden;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.6);
+  }
+
+  .preview-image-wrapper img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    pointer-events: none;
+    user-select: none;
+  }
+
+  .preview-image-wrapper {
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    right: 0;
+    bottom: 0;
+    background: white;
+    border: 1px solid #999;
+    cursor: nwse-resize;
+    z-index: 10;
+  }
+
+  .resizer {
   position: absolute;
   width: 16px;
   height: 16px;
   right: 0;
   bottom: 0;
   background: white;
-  border: 1px solid #999;
+  border: 2px solid #888;
   cursor: nwse-resize;
   z-index: 10;
-}
-
-.resizer {
-position: absolute;
-width: 16px;
-height: 16px;
-right: 0;
-bottom: 0;
-background: white;
-border: 2px solid #888;
-cursor: nwse-resize;
-z-index: 10;
-}
-
-
-  .image-label {
-  position: absolute;
-  bottom: 4px;
-  left: 4px;
-  background: rgba(0,0,0,0.7);
-  color: white;
-  font-size: 13px;
-  padding: 2px 6px;
-  border-radius: 4px;
-  pointer-events: none;
   }
 
-.selected-image {
-  outline: 3px solid #6cb2eb;
-}
 
-
-    .moodboard {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 1px;
+    .image-label {
+    position: absolute;
+    bottom: 4px;
+    left: 4px;
+    background: rgba(0,0,0,0.7);
+    color: white;
+    font-size: 13px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    pointer-events: none;
     }
-    .moodboard img {
-      width: 100px;
-      height: 100px;
-      object-fit: cover;
+
+  .selected-image {
+    outline: 3px solid #6cb2eb;
+  }
+
+
+      .moodboard {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1px;
+      }
+      .moodboard img {
+        width: 100px;
+        height: 100px;
+        object-fit: cover;
+        border-radius: 6px;
+        border: 1px solid #888;
+      }
+
+
+      button {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.4rem 1rem;
+      font-size: 16px;
+      background: white;
+      color: black;
+      border: none;
       border-radius: 6px;
-      border: 1px solid #888;
-    }
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.2s ease;
+      }
+
+      button:hover {
+      background: #eee;
+      }
+
+      button i {
+      font-size: 16px;
+      }
 
 
-    button {
-    display: inline-flex;
-    align-items: center;
+
+
+  /* new */
+
+
+
+  .pinterest-row {
+    display: flex;
     gap: 0.5rem;
-    padding: 0.4rem 1rem;
-    font-size: 16px;
-    background: white;
+    align-items: center;
+  }
+
+  .pinterest-row input {
+    flex: 1;
+    padding: 0.5rem;
+    background-color: white;
     color: black;
+    border-radius: 8px;
+    font-size: 16px;
+  }
+
+  .pinterest-row button {
+    background-color: #E60023;
+    color: white;
+    font-weight: bold;
+    padding: 0.5rem 1rem;
     border: none;
-    border-radius: 6px;
+    border-radius: 10px;
+    cursor: pointer;
+  }
+
+  .preview-placeholder {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: #aaa;
+    font-size: 16px;
+    text-align: center;
+    pointer-events: none;
+    user-select: none;
+  }
+
+  #furniture{
+    overflow-y: auto;
+    padding-right: 0.5rem;      /* Reduce padding */
+    width: 100%;                /* Let it fill available width */
+    box-sizing: border-box;  
+  }
+
+  .output-section {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    overflow: hidden;
+    margin: 1rem;
+    padding-bottom: 2rem;
+  }
+
+  .output-main {
+    display: flex;
+    flex-grow: 1;
+    height: 100vh;
+    overflow: hidden;
+    gap: 1rem;
+    padding-right:1rem;
+    box-sizing: border-box;
+  }
+
+
+
+  .label-tag {
+    padding: 0.5rem 0.75rem;
+    border-radius: 16px;
+    font-size: 14px;
+    background-color: #666;
+    color: white;
+    display: inline-block;
+    margin: 0.25rem;
+    max-width: 220px;
+    word-break: break-word;
+    line-height: 1.3;
+  }
+
+  .label-tag .remove {
+    margin-left: 0.5rem;
+    color: #bbb;
+    cursor: pointer;
+    font-weight: bold;
+  }
+
+  .form-card {
+    background-color: #1b1b1b;
+    padding: 1rem;
+    border-radius: 10px;
+    border: 1px solid #444;
+    margin-bottom: 1rem;
+  }
+
+  .form-card-header {
+    font-weight: bold;
+    font-size: 16px;
+    margin-bottom: 0.5rem;
+    color: #ccc;
+  }
+
+
+
+
+  .prompt-wrapper {
+    flex: 0.85;
+    height: 100%;
+    overflow: auto;
+  }
+
+  .output {
+    width: 100%;
+    height: 100%;
+    resize: none;
+    /* padding: 1rem; */
+    font-size: 16px;
+    background: black;
+    color: white;
+    border-radius: 8px;
+    border: 1px solid #555;
+    box-sizing: border-box;
+    min-height: 100%;
+  }
+
+  .labels-box {
+    width: 100%;
+    flex: 0.37;
+    background: black;
+    color: white;
+    border-radius: 8px;
+    border: 1px solid #555;
+    padding: 1rem;
+    border-radius: 10px;
+    overflow-y: auto;
+    height: 100%;
+    box-sizing: border-box;
+    display: flex;
+    flex-wrap: wrap;            /* Wrap tags to new lines */
+    gap: 0.5rem;                /* Space between tags */
+    align-content: flex-start;
+  }
+
+  .label-tag .remove {
+    margin-left: 0.5rem;
+    color: #bbb;
+    cursor: pointer;
+    font-weight: bold;
+  }
+
+  .output-top {
+    flex: 0 0 auto;
+    margin-bottom: 0.5rem;
+  }
+
+  .output-middle {
+    flex: 1 1 auto;
+    overflow: auto;
+  }
+
+  .output-bottom {
+    flex: 0 0 auto;
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    padding-top: 0.5rem;
+    margin-right: 1rem;
+    margin-top: 1rem;
+  }
+
+  .form-group {
+    margin-bottom: 1.5rem;
+    background-color: #111;
+    padding: 1rem;
+    border: 1px solid #444;
+    border-radius: 8px;
+  }
+
+  .form-group h3 {
+    margin-top: 0.25rem;
+    padding-bottom: 0.5rem;
+    font-size: 18px;
+    font-weight: bold;
+    color: #fff;
+    border-bottom: 2px solid #555; /* Draw the horizontal line */
+  }
+
+
+
+
+  label {
+    display: block;
+    margin-top: 1rem;
+    margin-bottom: 0.5rem;
+    font-weight: bold;
+    color: #ccc;
+  }
+
+  select[multiple] {
+    width: 100%;
+    height: auto;
+    padding: 0.5rem;
+    background-color: black;
+    color: white;
+    border: 1px solid #666;
+    border-radius: 5px;
+  }
+
+  .label-tag .remove {
+    margin-left: 0.5rem;
+    color: #ccc;
     font-weight: bold;
     cursor: pointer;
-    transition: background 0.2s ease;
-    }
-
-    button:hover {
-    background: #eee;
-    }
-
-    button i {
-    font-size: 16px;
-    }
+  }
 
 
-
-
-/* new */
-
-
-
-    .pinterest-row {
-  display: flex;
-  gap: 0.5rem;
-  margin-top: 1rem;
-}
-
-.pinterest-row input {
-  flex: 1;
-  padding: 0.5rem;
-  font-size: 16px;
-  background-color: white;
-  color: black;
-  /* border: 1px solid #ccc; */
-  border-radius: 10px;
-}
-
-.pinterest-row button {
-  background-color: #E60023;
-  color: white;
-  font-weight: bold;
-  padding: 0.5rem 1rem;
-  border: none;
-  border-radius: 10px;
-  cursor: pointer;
-}
-
-.preview-placeholder {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  color: #aaa;
-  font-size: 16px;
-  text-align: center;
-  pointer-events: none;
-  user-select: none;
-}
-
-#furniture{
-  overflow-y: auto;
-  padding-right: 0.5rem;      /* Reduce padding */
-  width: 100%;                /* Let it fill available width */
-  box-sizing: border-box;  
-}
-
-  </style>
-</head>
-<body>
-<!-- <h1>Photorealistic Office Render Prompt Builder</h1> -->
-<div class="container">
+    </style>
+  </head>
+  <body>
+  <!-- <h1>Photorealistic Office Render Prompt Builder</h1> -->
+  <div class="container">
     <div class="scrollable-form">
-        <div class="form-section">
-          <div class="form-group"><label for="officeSpaceType">Office Space Type</label><select id="officeSpaceType" multiple
-  onchange="moveSelectedOptionsToTop('officeSpaceType'); handleSearch(this, 'office type'); updateLabels(); updatePinterestQuery();">
-</select>
-</div>
-          <div class="form-group"><label for="intendedUse">Intended Use</label><select id="intendedUse" multiple onchange="handleSearch(this, 'office use case'); updateLabels()"></select></div>
-          <div class="form-group"><label for="designStyle">Design Style</label><select id="designStyle" multiple onchange="handleSearch(this, 'interior office style'); updateLabels(); updatePinterestQuery();"></select></div>
-          <div class="form-group"><label for="people">Number of People</label><select id="people" onchange="updateLabels()">
-            <option>2-4</option><option>4-6</option><option>6-10</option><option>10-20</option><option>20-50</option><option>50+</option>
-          </select></div>
-          <div class="form-group"><label for="furniture">Furniture</label><textarea id="furniture" rows="6" onchange="updateLabels()"></textarea></div>
-          <div class="form-group"><label for="materials">Primary Materials</label><select id="materials" multiple onchange="handleSearch(this, 'materials used in interiors'); updateLabels(); updatePinterestQuery();"></select></div>
-          <div class="form-group"><label for="accentMaterials">Accent Materials</label><select id="accentMaterials" multiple onchange="handleSearch(this, 'accent materials interior'); updateLabels()"></select></div>
-          <div class="form-group"><label for="primaryColor">Primary Color</label><select id="primaryColor" multiple onchange="handleSearch(this, 'interior color'); updateLabels(); updatePinterestQuery();"></select></div>
-          <div class="form-group"><label for="accentColors">Accent Colors</label><select id="accentColors" multiple onchange="handleSearch(this, 'interior accent colors'); updateLabels()"></select></div>
-          <div class="form-group"><label for="lightingType">Lighting Type</label><select id="lightingType" multiple onchange="handleSearch(this, 'lighting design office'); updateLabels(); updatePinterestQuery();"></select></div>
-          <div class="form-group"><label for="lightingElements">Lighting Elements</label><select id="lightingElements" multiple onchange="handleSearch(this, 'lighting fixtures'); updateLabels()"></select></div>
-          <div class="form-group"><label for="FlooringType">Flooring Type</label><select id="flooringType" multiple onchange="handleSearch(this, 'Flooring Type'); updateLabels(); updatePinterestQuery();"></select></div>
+      <div id="formContainer" class="form-section"></div>
+    </div>
+
+    <div class="output-section">
+      <div class="button-row">
+        <button onclick="exportToChatGPT()"
+          style="background: #10a37f; color: white; padding: 0.5rem 1rem; border-radius: 6px;">
+          Open in ChatGPT
+        </button>
+      </div>
+
+      <div class="output-main">
+        <div class="prompt-wrapper">
+          <textarea class="output" id="finalPrompt"></textarea>
+        </div>
+
+        <div class="labels-box" id="labelsBox">
+          <!-- labels get injected here -->
         </div>
       </div>
-      <div class="output-section">
-        <div class="button-row">
-          <!-- <button onclick="generatePrompt()">Generate Prompt</button> -->
-          <!-- <button onclick="copyToClipboard()">COPY</button> -->
-          <button onclick="exportToChatGPT()" style="margin-top: 1rem; background: #10a37f; color: white; padding: 0.5rem 1rem; border-radius: 6px;">
-  Open in ChatGPT
-</button>
 
-
-
-        </div>
-        <textarea class="output" id="finalPrompt"></textarea>
-        <div class="labels-box" id="labelsBox" ></div>
-        <div class="preview-box" id="previewBox">
-  <div id="previewPlaceholder" class="preview-placeholder">
-  Drag and drop images to get started.
-</div>
-
-  <div id="canvas" class="preview-canvas"></div> <!-- ✅ Add this line -->
-</div>
-
-            
-          <div class="moodboard-actions" style="
-    margin-top: 1rem;
-    display: flex;
-   flex-wrap: wrap;
-   gap: 0.75rem;
-   align-items: center;
-  justify-content: flex-end;
-  background: #333;
-  padding: 0.5rem;
-  border-radius: 8px;
-">
-  <!-- LEFT-ALIGNED: File input -->
-  <div style="margin-right: auto;">
-    <input type="file" multiple accept="image/*" onchange="handleMoodboardUpload(event)" style="max-width: 180px;" />
-    
+      <div class="output-bottom pinterest-row">
+        <input type="text" id="pinterestSearch" placeholder="Search query for Pinterest" readonly />
+        <button
+          onclick="window.open('https://www.pinterest.com/search/pins/?q=' + encodeURIComponent(document.getElementById('pinterestSearch').value))">
+          Open in Pinterest
+        </button>
+      </div>
+    </div>
   </div>
 
-  <!-- REST: Right-aligned tools -->
 
-  <button onclick="downloadAllImagesAsZip()">
-  <i class="fas fa-download"></i> Images
-</button>
-
-<button onclick="downloadCanvasAsImage()">
-  <i class="fas fa-download"></i> Canvas
-</button>
-
-</div> 
-          <div class="pinterest-row">
-  <input type="text" id="pinterestSearch" placeholder="Search query for Pinterest" readonly />
-  <button onclick="window.open('https://www.pinterest.com/search/pins/?q=' + encodeURIComponent(document.getElementById('pinterestSearch').value))">
-    Open in Pinterest
-  </button>
-</div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.0/jszip.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.2/papaparse.min.js"></script>
 
 
-</div>
-
-<!-- JSZip CDN -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.0/jszip.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
-
-<script>
+  <script>
 
 
+  function normalizeId(name) {
+    return name.replace(/\s+/g, '').toLowerCase();
+  }
+    
+  const sheetURL = 'https://docs.google.com/spreadsheets/d/1qXN1MR1pW3laS1wH_FI3vPblg3ANcqCMWVoGl0H7wek/export?format=csv';
 
-  function getLabelledImages() {
-  return Array.from(document.querySelectorAll('.preview-image-wrapper')).map(wrapper => {
-    const img = wrapper.querySelector('img');
-    const label = wrapper.querySelector('.image-label')?.innerText?.trim();
-    if (img && label) {
-      return { label, file: dataURLtoFile(img.src, `${label}.png`) };
-    }
-    return null;
-  }).filter(Boolean);
-}
+  window.onload = async function () {
 
-function dataURLtoFile(dataurl, filename) {
-  const arr = dataurl.split(',');
-  const mime = arr[0].match(/:(.*?);/)[1];
-  const bstr = atob(arr[1]);
-  let n = bstr.length;
-  const u8arr = new Uint8Array(n);
-  while (n--) u8arr[n] = bstr.charCodeAt(n);
-  return new File([u8arr], filename, { type: mime });
-}
+    const response = await fetch(sheetURL);
+    const csvText = await response.text();
+    const parsed = Papa.parse(csvText, { header: false });
+    const data = parsed.data;
 
+    const parentHeaders = data[0];
+    const childHeaders = data[1];
+    const contentRows = data.slice(2);
 
-
-
-
-  async function exportToChatGPT() {
-  const prompt = document.getElementById('finalPrompt').value;
-  const wrappers = document.querySelectorAll('.preview-image-wrapper');
-
-  const labelled = Array.from(wrappers)
-    .filter(wrapper => wrapper.querySelector('.image-label') && wrapper.querySelector('img'))
-    .map(wrapper => {
-      const label = wrapper.querySelector('.image-label').textContent.trim();
-      const img = wrapper.querySelector('img');
-      const base64 = img.src.split(',')[1]; // Extract base64 only
-      return { label, base64 };
+    const grouped = {};
+    childHeaders.forEach((child, i) => {
+      const parent = parentHeaders[i]?.trim();
+      if (!parent || !child) return;
+      if (!grouped[parent]) grouped[parent] = [];
+      grouped[parent].push({ name: child.trim(), index: i });
     });
 
-  if (labelled.length === 0) {
-    alert("No labelled images found.");
-    return;
-  }
+    const container = document.getElementById('formContainer');
 
-  const uploads = await Promise.all(labelled.map(async ({ label, base64 }) => {
-    try {
-      const res = await fetch("https://api.imgbb.com/1/upload", {
-        method: "POST",
-        body: new URLSearchParams({
-          key: "e4440d61f8e0b97bfe979bf8995476c2", // your API key
-          image: base64
-        })
+    for (const [parent, children] of Object.entries(grouped)) {
+      const group = document.createElement('div');
+      group.className = 'form-group';
+
+      const header = document.createElement('h3');
+      header.textContent = parent;
+      group.appendChild(header);
+
+      children.forEach(({ name, index }) => {
+    const label = document.createElement('label');
+    label.setAttribute('for', name);
+    label.textContent = name;
+    group.appendChild(label);
+
+    const id = normalizeId(name);
+    const allValues = contentRows.map(row => row[index]?.trim()).filter(v => !!v);
+    const uniqueOptions = [...new Set(allValues)];
+
+    let fieldElement;
+
+    if (uniqueOptions.length === 0) {
+      // Render textarea for empty column
+      const textarea = document.createElement('textarea');
+      textarea.setAttribute('id', id);
+      textarea.setAttribute('rows', 4);
+      textarea.placeholder = 'Enter value here';
+      textarea.addEventListener('input', () => {
+        generatePrompt();
+        updateStructuredView();
       });
-      const data = await res.json();
-      if (data.success) {
-        const url = data.data.url;
-        return `\n ${label} :${url}`;
-      } else {
-        return `**${label}**: (upload failed)`;
-      }
-    } catch (e) {
-      return `**${label}**: (upload error)`;
+      fieldElement = textarea;
+    } else {
+      // Render multi-select
+      const select = document.createElement('select');
+      select.setAttribute('id', id);
+      select.setAttribute('multiple', true);
+      select.style.marginBottom = '1rem';
+
+      uniqueOptions.forEach(value => {
+        const opt = document.createElement('option');
+        opt.value = value;
+        opt.textContent = value;
+        select.appendChild(opt);
+      });
+
+      select.addEventListener('change', () => {
+        moveSelectedOptionsToTop(select);
+        generatePrompt();
+        updateStructuredView();
+        updatePinterestQuery();
+
+      });
+
+      fieldElement = select;
     }
-  }));
 
-  const combinedPrompt = `${prompt}\n\n${uploads.join("\n\n")}`;
-  const chatGPTURL = `https://chat.openai.com/?prompt=${encodeURIComponent(combinedPrompt)}`;
-  window.open(chatGPTURL, "_blank");
-}
+    group.appendChild(fieldElement);
 
 
-
-function moveSelectedOptionsToTop(select) {
-  if (!select || !select.multiple) return;
-
-  const selectedOptions = Array.from(select.selectedOptions);
-  const unselectedOptions = Array.from(select.options).filter(opt => !opt.selected);
-
-  // Clear and reorder
-  select.innerHTML = '';
-  selectedOptions.forEach(opt => {
-    const newOpt = new Option(opt.text, opt.value, false, true);
-    select.appendChild(newOpt);
-  });
-  unselectedOptions.forEach(opt => {
-    const newOpt = new Option(opt.text, opt.value);
-    select.appendChild(newOpt);
+    
   });
 
-  select.scrollTop = 0;
-}
 
-document.querySelectorAll('select[multiple]').forEach(select => {
-  select.addEventListener('change', function () {
-    moveSelectedOptionsToTop(this);
+      container.appendChild(group);
+    }
+
+    
+  };
+
+
+  document.getElementById('labelsBox').addEventListener('click', function (e) {
+    if (e.target.classList.contains('remove')) {
+      const tag = e.target.closest('.label-tag');
+      const field = tag.getAttribute('data-field');
+      const value = tag.getAttribute('data-value');
+      if (field && value) {
+        removeLabel(field, value);
+      }
+    }
   });
-});
 
-
-
-
-
-
-  function openInChatGPT() {
-  const prompt = document.getElementById('finalPrompt').value.trim();
-  if (!prompt) {
-    alert("Prompt is empty!");
-    return;
+  function getLabelledImages() {
+    return Array.from(document.querySelectorAll('.preview-image-wrapper')).map(wrapper => {
+      const img = wrapper.querySelector('img');
+      const label = wrapper.querySelector('.image-label')?.innerText?.trim();
+      if (img && label) {
+        return { label, file: dataURLtoFile(img.src, `${label}.png`) };
+      }
+      return null;
+    }).filter(Boolean);
   }
-  const encodedPrompt = encodeURIComponent(prompt);
-  const chatURL = `https://chat.openai.com/?model=text-davinci-003&prompt=${encodedPrompt}`;
-  window.open(chatURL, '_blank');
-}
 
+  function dataURLtoFile(dataurl, filename) {
+    const arr = dataurl.split(',');
+    const mime = arr[0].match(/:(.*?);/)[1];
+    const bstr = atob(arr[1]);
+    let n = bstr.length;
+    const u8arr = new Uint8Array(n);
+    while (n--) u8arr[n] = bstr.charCodeAt(n);
+    return new File([u8arr], filename, { type: mime });
+  }
+
+
+    async function exportToChatGPT() {
+    const prompt = document.getElementById('finalPrompt').value;
+    const wrappers = document.querySelectorAll('.preview-image-wrapper');
+
+      const labelled = Array.from(wrappers)
+        .filter(wrapper => wrapper.querySelector('.image-label') && wrapper.querySelector('img'))
+        .map(wrapper => {
+          const label = wrapper.querySelector('.image-label').textContent.trim();
+          const img = wrapper.querySelector('img');
+          const base64 = img.src.split(',')[1]; // Extract base64 only
+          return { label, base64 };
+        });
+
+      if (labelled.length === 0) {
+      // Proceed without images
+      const prompt = document.getElementById('finalPrompt').value;
+      const chatGPTURL = `https://chat.openai.com/?prompt=${encodeURIComponent(prompt)}`;
+      window.open(chatGPTURL, "_blank");
+      return;
+      }
+
+
+      const uploads = await Promise.all(labelled.map(async ({ label, base64 }) => {
+        try {
+          const res = await fetch("https://api.imgbb.com/1/upload", {
+            method: "POST",
+            body: new URLSearchParams({
+              key: "e4440d61f8e0b97bfe979bf8995476c2", // your API key
+              image: base64
+            })
+          });
+          const data = await res.json();
+          if (data.success) {
+            const url = data.data.url;
+            return `\n ${label} :${url}`;
+          } else {
+            return `**${label}**: (upload failed)`;
+          }
+        } catch (e) {
+          return `**${label}**: (upload error)`;
+        }
+      }));
+
+    const combinedPrompt = `${prompt}\n\n${uploads.join("\n\n")}`;
+    const chatGPTURL = `https://chat.openai.com/?prompt=${encodeURIComponent(combinedPrompt)}`;
+    window.open(chatGPTURL, "_blank");
+  }
+
+  // Normalize select options to keep selected at the top
+  function moveSelectedOptionsToTop(selectElement) {
+    const selected = Array.from(selectElement.selectedOptions);
+    const unselected = Array.from(selectElement.options).filter(opt => !opt.selected);
+
+    selectElement.innerHTML = '';
+
+    selected.forEach(opt => {
+      const o = new Option(opt.text, opt.value, false, true);
+      selectElement.appendChild(o);
+    });
+
+    unselected.forEach(opt => {
+      const o = new Option(opt.text, opt.value, false, false);
+      selectElement.appendChild(o);
+    });
+  }
+
+  // Hook moveSelectedOptionsToTop on all select changes
+  function attachMoveSelectedTop() {
+    document.querySelectorAll('select[multiple]').forEach(select => {
+      select.addEventListener('change', () => moveSelectedOptionsToTop(select));
+    });
+  }
+
+  // Ensure it's run after dynamic form generation
+  setTimeout(attachMoveSelectedTop, 1000);
+
+
+    function openInChatGPT() {
+    const prompt = document.getElementById('finalPrompt').value.trim();
+    if (!prompt) {
+      alert("Prompt is empty!");
+      return;
+    }
+    const encodedPrompt = encodeURIComponent(prompt);
+    const chatURL = `https://chat.openai.com/?model=text-davinci-003&prompt=${encodedPrompt}`;
+    window.open(chatURL, '_blank');
+  }
+
+    document.querySelectorAll('select, textarea').forEach(el => {
+    el.addEventListener('change', generatePrompt);
+  });
+
+  function updatePreviewPlaceholder() {
+    const hasImages = document.querySelectorAll('#canvas .preview-image-wrapper').length > 0;
+    document.getElementById('previewPlaceholder').style.display = hasImages ? 'none' : 'block';
+  }
+
+
+    
+    function getMultiSelect(id) {
+      return Array.from(document.getElementById(id)?.selectedOptions || []).map(opt => opt.value);
+    }
+
+  function generatePrompt() {
+    const allFields = document.querySelectorAll('.form-group select[multiple], .form-group textarea');
+    const promptSections = [];
+    const grouped = {};
+
+    allFields.forEach(el => {
+      const parentGroup = el.closest('.form-group');
+      if (!parentGroup) return;
+
+      const parentSection = parentGroup.querySelector('h3')?.textContent?.trim() || 'General';
+      const fieldLabel = el.previousElementSibling?.textContent?.trim();
+
+      let selectedValues = [];
+      if (el.tagName === 'SELECT' && el.multiple) {
+        selectedValues = Array.from(el.selectedOptions).map(opt => opt.value.trim()).filter(Boolean);
+      } else if (el.tagName === 'TEXTAREA') {
+        const val = el.value.trim();
+        if (val) selectedValues = [val];
+      }
+
+      if (!selectedValues.length) return;
+
+      if (!grouped[parentSection]) grouped[parentSection] = [];
+      grouped[parentSection].push({ field: fieldLabel, values: selectedValues });
+    });
+
+    for (const [section, fields] of Object.entries(grouped)) {
+      let sectionText = `${section}:\n`;
+      fields.forEach(({ field, values }) => {
+        sectionText += `• ${field}: ${values.join(', ')}\n`;
+      });
+      promptSections.push(sectionText);
+    }
+
+    const result = `Create a photorealistic image with the following specifications:\n\n${promptSections.join('\n')}\nEnsure ambient lighting creates a sophisticated and welcoming feel.`;
+
+    document.getElementById('finalPrompt').value = result;
+  }
+
+  setTimeout(() => {
+    document.querySelectorAll('select[multiple]').forEach(select => {
+      select.addEventListener('change', generatePrompt);
+    });
+  }, 500); // slight delay to wait for selects to render
+
+
+  function updateStructuredView() {
+    const groupedContainer = document.getElementById('labelsBox');
+    groupedContainer.innerHTML = '';
+
+    const formGroups = document.querySelectorAll('.form-group');
+    formGroups.forEach(group => {
+      const header = group.querySelector('h3');
+      if (!header) return;
+      const groupTitle = header.textContent.trim();
+      const fields = group.querySelectorAll('select, textarea');
+
+      const selectedValues = [];
+      fields.forEach(el => {
+        const fieldId = el.id;
+        if (el.tagName === 'SELECT' && el.multiple) {
+          Array.from(el.selectedOptions).forEach(opt => {
+            selectedValues.push({ field: fieldId, value: opt.value.trim() });
+          });
+        } else if ((el.tagName === 'TEXTAREA' || el.tagName === 'INPUT') && el.value.trim()) {
+          selectedValues.push({ field: fieldId, value: el.value.trim() });
+        }
+      });
+
+      if (selectedValues.length === 0) return;
+
+      const section = document.createElement('div');
+      section.classList.add('form-card');
+
+      const title = document.createElement('div');
+      title.classList.add('form-card-header');
+      title.textContent = groupTitle;
+      section.appendChild(title);
+
+      selectedValues.forEach(({ field, value }) => {
+        const tag = document.createElement('span');
+        tag.className = 'label-tag';
+        tag.setAttribute('data-field', normalizeId(field));
+        tag.setAttribute('data-value', value);
+        tag.innerHTML = `${value} <span class="remove" style="cursor:pointer;">×</span>`;
+        section.appendChild(tag);
+      });
+
+      groupedContainer.appendChild(section);
+    });
+  }
+    function copyToClipboard() {
+      const text = document.getElementById('finalPrompt').value;
+      navigator.clipboard.writeText(text).then(() => alert('Copied!'));
+    }
+      const scrollableForm = document.querySelector('.scrollable-form');
+      
+      const outputSection = document.querySelector('.output-section');
+    
+      // outputSection.addEventListener('wheel', function (e) {
+      //   if (scrollableForm) {
+      //     scrollableForm.scrollBy({
+      //       top: e.deltaY,
+      //       behavior: 'auto'
+      //     });
+      //   }
+      //   e.preventDefault(); // prevent scroll on right side
+      // }, { passive: false });
+
+      const canvas = document.getElementById('canvas');
+      let scale = 1;
+      let isDraggingCanvas = false;
+      let canvasOffsetX = 0, canvasOffsetY = 0, dragStartX = 0, dragStartY = 0;
+    
+
+  async function handleSearch(selectElement, context) {
+  
+    }
+    
+    function updateLabels() {
+    const keys =
+    ['officeSpaceType','intendedUse','designStyle','people','furniture','materials','accentMaterials','primaryColor','accentColors','lightingType','lightingElements'];
+    const labelsBox = document.getElementById('labelsBox');
+    labelsBox.innerHTML = '';
+    keys.forEach(id => {
+    const el = document.getElementById(id);
+    let values = [];
+
+    if (el.tagName === 'SELECT' && el.multiple) {
+    values = Array.from(el.selectedOptions).map(opt => opt.value); // ordered
+    } else {
+    values = [el.value];
+    }
+    values.forEach(val => {
+    if (val && val.trim()) {
+    const span = document.createElement('span');
+    span.className = 'label-tag label-' + id;
+    span.setAttribute('data-field', id);
+    span.setAttribute('data-value', val);
+    span.innerHTML = `${val}<span class="remove" style="margin-left:8px;cursor:pointer;">×</span>`;
+    labelsBox.appendChild(span);
+
+
+
+    }
+    });
+    });
+
+    }
+
+  function removeLabel(id, value) {
+    const el = document.getElementById(normalizeId(id));
+    if (!el) return;
+
+    if (el.tagName === 'SELECT' && el.multiple) {
+      Array.from(el.options).forEach(opt => {
+        if (opt.value === value) opt.selected = false;
+      });
+    } else {
+      el.value = '';
+    }
+
+    updateStructuredView();
+    generatePrompt();
+  }
+
+
+ function updatePinterestQuery() {
+  const getValueByLabel = (labelText) => {
+    const id = normalizeId(labelText);
+    const el = document.getElementById(id);
+    if (!el) return '';
+
+    if (el.tagName === 'SELECT' && el.multiple) {
+      return el.selectedOptions.length ? el.selectedOptions[0].value.trim() : '';
+    }
+    if (el.tagName === 'TEXTAREA') {
+      return el.value.trim();
+    }
+    return '';
+  };
+
+  const business = getValueByLabel('Business type');
+  const brandcolor = getValueByLabel('Brand Color');
+  const ambience = getValueByLabel('Ambience Preference');
+  const emotion = getValueByLabel('Emotion');
+  const accent = getValueByLabel('Accent Color');
+  const primary = getValueByLabel('Primary Material');
+  const accentMat = getValueByLabel('Accent Material');
+  const lightingElements = getValueByLabel('Lighting Elements');
+  const flooring = getValueByLabel('Flooring Type');
+  const ceiling = getValueByLabel('Ceiling Treatment');
+
+  const design = getValueByLabel('Design Style');
+  const office = getValueByLabel('Office Space Type');
+  const color = getValueByLabel('Primary Color');
+  const lighting = getValueByLabel('Lighting Type');
+
+  const parts = [];
+  if (design) parts.push(`${design} office`);
+  if (office) parts.push(office);
+  if (emotion) parts.push(`${emotion} vibe`);
+  if (ambience) parts.push(`${ambience} mood`);
+  if (color) parts.push(`with ${color} as primary color`);
+  if (lighting) parts.push(`and ${lighting} lighting`);
+  if (lightingElements) parts.push(`using ${lightingElements}`);
+  if (flooring) parts.push(`on ${flooring} flooring`);
+  if (ceiling) parts.push(`with ${ceiling} ceiling`);
+  if (primary) parts.push(`featuring ${primary} surfaces`);
+  if (accentMat) parts.push(`and ${accentMat} details`);
+  if (accent) parts.push(`plus ${accent} accents`);
+  if (brandcolor) parts.push(`brand colors: ${brandcolor}`);
+  if (business) parts.push(`${business} environment`);
+
+  document.getElementById('pinterestSearch').value = parts.join(' ');
+}
 
 
   document.querySelectorAll('select, textarea').forEach(el => {
-  el.addEventListener('change', generatePrompt);
-});
-
-function updatePreviewPlaceholder() {
-  const hasImages = document.querySelectorAll('#canvas .preview-image-wrapper').length > 0;
-  document.getElementById('previewPlaceholder').style.display = hasImages ? 'none' : 'block';
-}
-
-
-
-
-
-
-    const sheetURL = 'https://docs.google.com/spreadsheets/d/1qXN1MR1pW3laS1wH_FI3vPblg3ANcqCMWVoGl0H7wek/export?format=csv';
-    const pixabayKey = '49867384-e847c359e6df440fd86b28b9d';
-    
-    fetch(sheetURL).then(res => res.text()).then(csv => {
-      const parsed = Papa.parse(csv, { header: true });
-      const data = parsed.data;
-      const keys = ['Office Space Type', 'IntendedUse', 'DesignStyle', 'Materials', 'AccentMaterials', 'PrimaryColor', 'AccentColors', 'LightingType', 'LightingElements', 'FlooringType'];
-      keys.forEach(key => {
-        const id = key.replace(/\s+/g, '').charAt(0).toLowerCase() + key.replace(/\s+/g, '').slice(1);
-        const unique = [...new Set(data.map(row => row[key]).filter(v => v && v.trim() !== ""))];
-        const select = document.getElementById(id);
-        if (select) {
-          select.innerHTML = unique.map(item => `<option value="${item}">${item}</option>`).join('');
-        }
-      });
+    el.addEventListener('change', () => {
+      generatePrompt();
+      updateStructuredView();
+      updatePinterestQuery();  // ✅ ensure it runs after all updates
     });
-  
-  
-  function getMultiSelect(id) {
-    return Array.from(document.getElementById(id)?.selectedOptions || []).map(opt => opt.value);
-  }
-  
-  function generatePrompt() {
-    const officeType = getMultiSelect('officeSpaceType');
-    const intendedUse = getMultiSelect('intendedUse');
-    const designStyle = getMultiSelect('designStyle');
-    const people = document.getElementById('people').value;
-    const furniture = document.getElementById('furniture').value.trim();
-    const materials = getMultiSelect('materials');
-    const accentMaterials = getMultiSelect('accentMaterials');
-    const primaryColor = getMultiSelect('primaryColor');
-    const accentColors = getMultiSelect('accentColors');
-    const lightingType = getMultiSelect('lightingType');
-    const lightingElements = getMultiSelect('lightingElements');
-    const FlooringType = getMultiSelect('FlooringType');
-
-    const promptParts = [];
-    const intro = [];
-    if (officeType.length) intro.push(`of a ${officeType.join(', ')} zone`);
-    if (intendedUse.length) intro.push(`for ${intendedUse.join(', ')}`);
-    if (designStyle.length) intro.push(`styled as ${designStyle.join(', ')}`);
-    if (intro.length) promptParts.push(`Generate a photorealistic rendering ${intro.join(' ')}.`);
-  
-    const specs = [];
-    if (people) specs.push(`Capacity: ${people} people`);
-    if (furniture) specs.push(`Layout Elements: Include ${furniture}`);
-    if (specs.length) promptParts.push(`\n\nSpace-Specific Requirements:\n${specs.join('. ')}`);
-  
-    const materialsText = [];
-    if (materials.length) materialsText.push(`Primary material: ${materials.join(', ')}`);
-    if (accentMaterials.length) materialsText.push(`Accent material: ${accentMaterials.join(', ')}`);
-    if (materialsText.length) promptParts.push(`\n\nMaterials & Textures: ${materialsText.join('; ')}`);
-  
-    const colorText = [];
-    if (primaryColor.length) colorText.push(`Primary colors: ${primaryColor.join(', ')}`);
-    if (accentColors.length) colorText.push(`Accent colors: ${accentColors.join(', ')}`);
-    if (colorText.length) promptParts.push(`\n\nColor Palette: ${colorText.join('; ')}`);
-  
-    const lightingText = [];
-    if (lightingType.length) lightingText.push(`Type: ${lightingType.join(', ')}`);
-    if (lightingElements.length) lightingText.push(`Elements: ${lightingElements.join(', ')}`);
-    if (lightingText.length) promptParts.push(`\n\nLighting: ${lightingText.join('; ')}`);
-  
-    promptParts.push("\n\nEnsure ambient lighting creates a sophisticated and welcoming feel.");
-    document.getElementById('finalPrompt').value = promptParts.join('');
-  }
-    
-  function copyToClipboard() {
-    const text = document.getElementById('finalPrompt').value;
-    navigator.clipboard.writeText(text).then(() => alert('Copied!'));
-  }
-    const scrollableForm = document.querySelector('.scrollable-form');
-    
-    const outputSection = document.querySelector('.output-section');
-  
-    // outputSection.addEventListener('wheel', function (e) {
-    //   if (scrollableForm) {
-    //     scrollableForm.scrollBy({
-    //       top: e.deltaY,
-    //       behavior: 'auto'
-    //     });
-    //   }
-    //   e.preventDefault(); // prevent scroll on right side
-    // }, { passive: false });
-
-    const canvas = document.getElementById('canvas');
-    let scale = 1;
-    let isDraggingCanvas = false;
-    let canvasOffsetX = 0, canvasOffsetY = 0, dragStartX = 0, dragStartY = 0;
-  
-    // function handleMoodboardUpload(event) {
-    //   const files = event.target.files;
-    //   Array.from(files).forEach(file => {
-    //     const reader = new FileReader();
-    //     reader.onload = function (e) {
-    //       const wrapper = document.createElement('div');
-    //       wrapper.className = 'preview-image-wrapper';
-    //       wrapper.style.width = '200px';
-    //       wrapper.style.height = '200px';
-    //       wrapper.style.left = `${Math.random() * 600}px`;
-    //       wrapper.style.top = `${Math.random() * 300}px`;
-  
-    //       const img = document.createElement('img');
-    //       img.src = e.target.result;
-    //       wrapper.appendChild(img);
-    //       canvas.appendChild(wrapper);
-    //       makeDraggable(wrapper);
-    //     };
-    //     reader.readAsDataURL(file);
-    //   });
-    // }
-
-    function handleMoodboardUpload(event) {
-  const files = event.target.files;
-  const canvas = document.getElementById('canvas');
-
-  
-
-  const cellWidth = 200;
-  const cellHeight = 200;
-  const margin = 15;
-  const canvasPadding = 40;
-  const maxPerRow = Math.floor((canvas.offsetWidth - canvasPadding) / (cellWidth + margin));
-  
-  let imageCount = canvas.querySelectorAll('.preview-image-wrapper').length;
-
-  Array.from(files).forEach((file, i) => {
-    const reader = new FileReader();
-    reader.onload = function (e) {
-      const wrapper = document.createElement('div');
-      wrapper.className = 'preview-image-wrapper';
-      wrapper.style.width = `${cellWidth}px`;
-      wrapper.style.height = `${cellHeight}px`;
-
-      // Compute grid position
-      const index = imageCount + i;
-      const col = index % maxPerRow;
-      const row = Math.floor(index / maxPerRow);
-      wrapper.style.left = `${canvasPadding + col * (cellWidth + margin)}px`;
-      wrapper.style.top = `${canvasPadding + row * (cellHeight + margin)}px`;
-
-      const img = document.createElement('img');
-      img.src = e.target.result;
-      wrapper.appendChild(img);
-      canvas.appendChild(wrapper);
-      makeDraggable(wrapper);
-      updatePreviewPlaceholder();
-
-      wrapper.addEventListener('click', function (e) {
-  document.querySelectorAll('.preview-image-wrapper').forEach(el => el.classList.remove('selected-image'));
-  wrapper.classList.add('selected-image');
-  e.stopPropagation(); // prevent triggering drag
-});
-
-    };
-    reader.readAsDataURL(file);
-  });
-}
-
-  
-function makeDraggable(wrapper) {
-  let isDragging = false;
-  let offsetX, offsetY;
-
-
-
-  
-
-
-
-
-
-
-
-  // Allow drag
-  wrapper.addEventListener('mousedown', function (e) {
-    if (e.target.tagName === 'TEXTAREA' || e.target.classList.contains('delete-btn')) return;
-
-    // For selection logic
-    const all = Array.from(document.querySelectorAll('.preview-image-wrapper'));
-
-    // Ctrl/Cmd → toggle selection
-    if (e.ctrlKey || e.metaKey) {
-      wrapper.classList.toggle('selected');
-      lastSelectedWrapper = wrapper;
-    }
-    // Shift → range selection
-    else if (e.shiftKey && lastSelectedWrapper) {
-      const start = all.indexOf(lastSelectedWrapper);
-      const end = all.indexOf(wrapper);
-      const [min, max] = [Math.min(start, end), Math.max(start, end)];
-      all.forEach((el, i) => {
-        if (i >= min && i <= max) el.classList.add('selected');
-      });
-    }
-    // Regular click → single selection
-    else {
-      all.forEach(el => el.classList.remove('selected'));
-      wrapper.classList.add('selected');
-      lastSelectedWrapper = wrapper;
-    }
-
-    // Enable drag
-    isDragging = true;
-    offsetX = e.clientX - wrapper.offsetLeft;
-    offsetY = e.clientY - wrapper.offsetTop;
-    wrapper.style.zIndex = 1000;
-    e.stopPropagation();
-  });
-
-  document.addEventListener('mousemove', function (e) {
-    if (!isDragging) return;
-    const selectedWrappers = document.querySelectorAll('.preview-image-wrapper.selected');
-    selectedWrappers.forEach(el => {
-      el.style.left = `${e.clientX - offsetX}px`;
-      el.style.top = `${e.clientY - offsetY}px`;
-    });
-  });
-
-  document.addEventListener('mouseup', function () {
-    isDragging = false;
-    wrapper.style.zIndex = '';
-  });
-
-  // Right-click to remove
-  wrapper.addEventListener('contextmenu', e => {
-  e.preventDefault();
-  const label = prompt("Label this image:");
-  if (label) {
-    let labelTag = wrapper.querySelector('.image-label');
-    if (!labelTag) {
-      labelTag = document.createElement('div');
-      labelTag.className = 'image-label';
-      wrapper.appendChild(labelTag);
-    }
-    labelTag.innerText = label;
-  }
-});
-
-}
-
-  
-    const previewBox = document.getElementById('previewBox');
-    previewBox.addEventListener('wheel', function(e) {
-        // Allow zooming or internal canvas scroll (if needed), but stop propagation
-        e.stopPropagation();
-      }, { passive: false });
-
-    
-  
-    previewBox.addEventListener('wheel', function (e) {
-      e.preventDefault();
-      const delta = e.deltaY > 0 ? -0.1 : 0.1;
-      const prevScale = scale;
-      scale += delta;
-      scale = Math.max(0.3, Math.min(scale, 3));
-  
-      const rect = previewBox.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-  
-      canvasOffsetX = x - ((x - canvasOffsetX) / prevScale) * scale;
-      canvasOffsetY = y - ((y - canvasOffsetY) / prevScale) * scale;
-  
-      updateCanvasTransform();
-    }, { passive: false });
-  
-    previewBox.addEventListener('mousedown', function (e) {
-      if (e.target !== previewBox) return;
-      isDraggingCanvas = true;
-      dragStartX = e.clientX;
-      dragStartY = e.clientY;
-      previewBox.style.cursor = 'grabbing';
-    });
-  
-    document.addEventListener('mousemove', function (e) {
-      if (!isDraggingCanvas) return;
-      canvasOffsetX += (e.clientX - dragStartX);
-      canvasOffsetY += (e.clientY - dragStartY);
-      dragStartX = e.clientX;
-      dragStartY = e.clientY;
-      updateCanvasTransform();
-    });
-  
-    document.addEventListener('mouseup', function () {
-      isDraggingCanvas = false;
-      previewBox.style.cursor = 'grab';
-    });
-  
-    function updateCanvasTransform() {
-      canvas.style.transform = `translate(${canvasOffsetX}px, ${canvasOffsetY}px) scale(${scale})`;
-    }
-
-
-
-    // Paste from clipboard to moodboard
-document.addEventListener('paste', async (event) => {
-  const items = event.clipboardData?.items || [];
-  for (const item of items) {
-    if (item.type.indexOf('image') !== -1) {
-      const blob = item.getAsFile();
-      const reader = new FileReader();
-      reader.onload = function (e) {
-        const wrapper = document.createElement('div');
-        wrapper.className = 'preview-image-wrapper';
-        img.onload = () => {
-  wrapper.style.width = img.naturalWidth + 'px';
-  wrapper.style.height = img.naturalHeight + 'px';
-};
-
-        wrapper.style.left = `${Math.random() * 600}px`;
-        wrapper.style.top = `${Math.random() * 300}px`;
-
-        const img = document.createElement('img');
-        img.src = e.target.result;
-        wrapper.appendChild(img);
-        canvas.appendChild(wrapper);
-        makeDraggable(wrapper);
-      };
-      reader.readAsDataURL(blob);
-      event.preventDefault();
-      break;
-    }
-  }
-});
-
-function downloadAllImagesAsZip() {
-  const zip = new JSZip();
-  const images = document.querySelectorAll('#previewBox .preview-image-wrapper img');
-  const promises = [];
-
-  images.forEach((img, index) => {
-    const url = img.src;
-    const filename = `image${index + 1}.png`;
-    const promise = fetch(url)
-      .then(res => res.blob())
-      .then(blob => zip.file(filename, blob));
-    promises.push(promise);
-  });
-
-  Promise.all(promises).then(() => {
-    zip.generateAsync({ type: "blob" }).then(content => {
-      saveAs(content, "moodboard_images.zip");
-    });
-  });
-}
-
-function downloadCanvasAsImage() {
-  const canvasEl = document.getElementById('canvas');
-  const wrappers = canvasEl.querySelectorAll('.preview-image-wrapper');
-
-  if (wrappers.length === 0) return;
-
-  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-
-  wrappers.forEach(el => {
-    const left = parseFloat(el.style.left);
-    const top = parseFloat(el.style.top);
-    const width = el.offsetWidth;
-    const height = el.offsetHeight;
-
-    minX = Math.min(minX, left);
-    minY = Math.min(minY, top);
-    maxX = Math.max(maxX, left + width);
-    maxY = Math.max(maxY, top + height);
-  });
-
-  const width = maxX - minX;
-  const height = maxY - minY;
-
-  // Clone canvas and trim to bounding box
-  const clone = canvasEl.cloneNode(true);
-  clone.style.position = 'absolute';
-  clone.style.top = '0';
-  clone.style.left = '0';
-  clone.style.transform = 'none';
-  clone.style.width = `${width}px`;
-  clone.style.height = `${height}px`;
-  clone.style.overflow = 'hidden';
-
-  clone.querySelectorAll('.preview-image-wrapper').forEach(el => {
-    el.style.left = `${parseFloat(el.style.left) - minX}px`;
-    el.style.top = `${parseFloat(el.style.top) - minY}px`;
-  });
-
-  document.body.appendChild(clone);
-
-  html2canvas(clone, {
-    backgroundColor: '#222',
-    width: width,
-    height: height,
-    scale: 2
-  }).then(canvas => {
-    document.body.removeChild(clone);
-    canvas.toBlob(blob => {
-      saveAs(blob, 'moodboard_cropped.png');
-    });
-  });
-}
-
-
-
-
-async function handleSearch(selectElement, context) {
-    // const selectedOptions = Array.from(selectElement.selectedOptions);
-    // if (selectedOptions.length === 0) return;
-    // const query = `${selectedOptions[selectedOptions.length - 1].value} ${context}`;
-    // const previewBox = document.getElementById('previewBox');
-    // previewBox.innerHTML = `Searching for “${query}”...`;
-    // try {
-    //   const res = await fetch(`https://pixabay.com/api/?key=${pixabayKey}&q=${encodeURIComponent(query)}&image_type=photo&orientation=horizontal`);
-    //   const data = await res.json();
-    //   const image = data.hits?.[0];
-    //   previewBox.innerHTML = image ? `<img src="${image.webformatURL}" alt="${query}" class="preview-image">` : 'No image found.';
-    // } catch (err) {
-    //   previewBox.innerHTML = 'Error fetching image.';
-    // }
-  }
-  
-  function updateLabels() {
-  const keys =
-  ['officeSpaceType','intendedUse','designStyle','people','furniture','materials','accentMaterials','primaryColor','accentColors','lightingType','lightingElements'];
-  const labelsBox = document.getElementById('labelsBox');
-  labelsBox.innerHTML = '';
-  keys.forEach(id => {
-  const el = document.getElementById(id);
-  let values = [];
-
-  if (el.tagName === 'SELECT' && el.multiple) {
-  values = Array.from(el.selectedOptions).map(opt => opt.value); // ordered
-  } else {
-  values = [el.value];
-  }
-
-  values.forEach(val => {
-  if (val && val.trim()) {
-  const span = document.createElement('span');
-  span.className = 'label-tag label-' + id;
-  span.innerHTML = `${val}<span class="remove" onclick="removeLabel('${id}', '${val}')">×</span>`;
-  labelsBox.appendChild(span);
-  }
-  });
-  });
-
-  }
-  
-  // function removeLabel(id, value) {
-  //   const el = document.getElementById(id);
-  //   if (el.tagName === 'SELECT' && el.multiple) {
-  //     Array.from(el.options).forEach(opt => { if (opt.value === value) opt.selected = false; });
-  //   } else if (el.tagName === 'TEXTAREA' || el.tagName === 'INPUT') {
-  //     el.value = '';
-  //   }
-  //   updateLabels();
-  //   generatePrompt();
-  // }
-
-
-  function removeLabel(id, value) {
-  const el = document.getElementById(id);
-  if (!el) return;
-
-  if (el.tagName === 'SELECT' && el.multiple) {
-    Array.from(el.options).forEach(opt => {
-      if (opt.value === value) opt.selected = false;
-    });
-  } else {
-    el.value = ''; // for single select or input
-  }
-
-  updateLabels();
-  generatePrompt(); // also refresh the prompt
-}
-
-
-
-
-
-
-  function updatePinterestQuery() {
-    const design = getMultiSelect('designStyle')[0];
-    const office = getMultiSelect('officeSpaceType')[0];
-    const color = getMultiSelect('primaryColor')[0];
-    const lighting = getMultiSelect('lightingType')[0];
-  
-    const searchInput = document.getElementById('pinterestSearch');
-  
-    const parts = [];
-    if (design) parts.push(`${design} office`);
-    if (office) parts.push(`${office}`);
-    if (color) parts.push(`with ${color} as primary color`);
-    if (lighting) parts.push(`and ${lighting} lighting`);
-  
-    searchInput.value = parts.join(' ');
-  }
-  function focusMoodboardOnContent() {
-  const images = document.querySelectorAll('#canvas .preview-image-wrapper');
-  if (images.length === 0) return;
-
-  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-
-  images.forEach(el => {
-    const left = parseFloat(el.style.left);
-    const top = parseFloat(el.style.top);
-    const width = parseFloat(el.style.width) || el.offsetWidth;
-    const height = parseFloat(el.style.height) || el.offsetHeight;
-
-    minX = Math.min(minX, left);
-    minY = Math.min(minY, top);
-    maxX = Math.max(maxX, left + width);
-    maxY = Math.max(maxY, top + height);
-  });
-
-  const contentWidth = maxX - minX;
-  const contentHeight = maxY - minY;
-
-  const previewBox = document.getElementById('previewBox');
-  const boxWidth = previewBox.clientWidth;
-  const boxHeight = previewBox.clientHeight;
-
-  const padding = 80;
-  const availableWidth = boxWidth - padding * 2;
-  const availableHeight = boxHeight - padding * 2;
-
-  scale = Math.min(availableWidth / contentWidth, availableHeight / contentHeight);
-  scale = Math.max(0.3, Math.min(scale, 2)); // Clamp zoom
-
-  canvasOffsetX = (boxWidth - contentWidth * scale) / 2 - minX * scale;
-  canvasOffsetY = (boxHeight - contentHeight * scale) / 2 - minY * scale;
-
-  updateCanvasTransform();
-}
-
-document.addEventListener('keydown', function (e) {
-  if (e.key === 'f' || e.key === 'F') {
-    focusMoodboardOnContent();
-  }
-});
-
-document.addEventListener('keydown', function (e) {
-  if (e.key === 'Delete') {
-    document.querySelectorAll('.preview-image-wrapper.selected').forEach(el => el.remove());
-    updatePreviewPlaceholder();
-
-  }
-});
-
-
-
-
-
-
-
-
-// Prevent default behavior for drag events
-['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-  previewBox.addEventListener(eventName, e => {
-    e.preventDefault();
-    e.stopPropagation();
-  }, false);
-});
-
-// Optional: show border when dragging over
-previewBox.addEventListener('dragover', () => {
-  previewBox.classList.add('dragover');
-});
-previewBox.addEventListener('dragleave', () => {
-  previewBox.classList.remove('dragover');
-});
-previewBox.addEventListener('drop', e => {
-  previewBox.classList.remove('dragover');
-
-  const files = Array.from(e.dataTransfer.files || []);
-  const items = Array.from(e.dataTransfer.items || []);
-
-  // 1. Handle local image files
-  files.forEach(file => {
-    if (file.type.startsWith('image/')) {
-      const reader = new FileReader();
-      reader.onload = function (ev) {
-        createMoodboardImage(ev.target.result);
-      };
-      reader.readAsDataURL(file);
-    }
-  });
-
-  // 2. Handle image URLs dragged from web
-  items.forEach(item => {
-    if (item.kind === 'string' && item.type === 'text/uri-list') {
-      item.getAsString(url => {
-        if (url.match(/\.(jpeg|jpg|png|gif|webp|svg)$/i)) {
-          createMoodboardImage(url);
-        }
+    if (el.tagName === 'TEXTAREA') {
+      el.addEventListener('input', () => {
+        generatePrompt();
+        updateStructuredView();
+        updatePinterestQuery();  // ✅ input handler for textarea
       });
     }
   });
-});
 
 
-function addImageToCanvas(src) {
-  const wrapper = document.createElement('div');
-  wrapper.className = 'preview-image-wrapper';
-  const img = document.createElement('img');
-  img.src = src;
-
-  img.onload = () => {
-    wrapper.style.width = img.naturalWidth + 'px';
-    wrapper.style.height = img.naturalHeight + 'px';
-  };
-
-  wrapper.style.left = `${Math.random() * 600}px`;
-  wrapper.style.top = `${Math.random() * 300}px`;
-
-  wrapper.appendChild(img);
-  canvas.appendChild(wrapper);
-  makeDraggable(wrapper);
-  updatePreviewPlaceholder();
-
-}
-
-
-
-document.addEventListener('paste', async (event) => {
-  const items = event.clipboardData?.items || [];
-
-  for (const item of items) {
-    // Handle image blobs (from file copy)
-    if (item.type.startsWith('image/')) {
-      const blob = item.getAsFile();
-      const reader = new FileReader();
-      reader.onload = function (e) {
-        addImageToCanvas(e.target.result);
-      };
-      reader.readAsDataURL(blob);
-      event.preventDefault();
-      return;
-    }
-
-    // Handle pasted image URLs (e.g. from right-click > copy image on websites)
-    if (item.type === 'text/html') {
-      item.getAsString((html) => {
-        const match = html.match(/<img[^>]+src="([^">]+)"/);
-        if (match && match[1]) {
-          addImageToCanvas(match[1]);
-        }
-      });
-      event.preventDefault();
-      return;
-    }
-
-    // Fallback: plain text with direct URL
-    if (item.type === 'text/plain') {
-      item.getAsString((url) => {
-        if (url.match(/\.(jpeg|jpg|png|gif|webp)$/i)) {
-          addImageToCanvas(url);
-        }
-      });
-      event.preventDefault();
-      return;
-    }
-  }
-});
-
-
-function createMoodboardImage(src) {
-  const wrapper = document.createElement('div');
-  wrapper.className = 'preview-image-wrapper';
-  wrapper.style.left = `${Math.random() * 600}px`;
-  wrapper.style.top = `${Math.random() * 300}px`;
-
-  const img = new Image();
-  img.onload = () => {
-    wrapper.style.width = img.naturalWidth + 'px';
-    wrapper.style.height = img.naturalHeight + 'px';
-  };
-  img.src = src;
-
-  wrapper.appendChild(img);
-
-  // Add custom resizer
-  const resizer = document.createElement('div');
-  resizer.className = 'resizer';
-  wrapper.appendChild(resizer);
-
-  makeDraggable(wrapper);
-  makeResizable(wrapper, resizer);
-  canvas.appendChild(wrapper);
-  updatePreviewPlaceholder();
-
-}
-
-function makeResizable(wrapper, handle) {
-  let isResizing = false;
-  let startX, startY, startWidth, startHeight;
-
-  handle.addEventListener('mousedown', (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    isResizing = true;
-    startX = e.clientX;
-    startY = e.clientY;
-    startWidth = wrapper.offsetWidth;
-    startHeight = wrapper.offsetHeight;
-    document.body.style.cursor = 'nwse-resize';
-  });
-
-  document.addEventListener('mousemove', (e) => {
-    if (!isResizing) return;
-    const dx = e.clientX - startX;
-    const dy = e.clientY - startY;
-    wrapper.style.width = (startWidth + dx) + 'px';
-    wrapper.style.height = (startHeight + dy) + 'px';
-  });
-
-  document.addEventListener('mouseup', () => {
-    if (isResizing) {
-      isResizing = false;
-      document.body.style.cursor = '';
-    }
-  });
-}
-
-
-
-  
   </script>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
 
 
+    
+  </body>
+  </html>  <!DOCTYPE html>
+  <html lang="en">
+  <head>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Photorealistic Office Render Prompt Builder</title>
+    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.2/papaparse.min.js"></script>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        font-size: 18px;
+        padding: 1rem;
+        background-color: #111;
+        color: white;
+        overflow: hidden;
+      }
+
+  .container {
+    display: flex;
+    height: 100vh;
+    width: 100vw;
+    overflow: hidden;
+  }
+
+  .scrollable-form {
+      padding: 1rem 0;
+      max-height: 99vh;
+      overflow-y: auto;
+      flex: 0 0 35%;
+      padding-right: 0.5rem; /* ✅ Reduce padding */
+      margin-right: 0; /* ✅ No extra margin */
+      box-sizing: border-box; /* ✅ Ensures padding doesn't add to width */
+      max-width: 20%;
+      }
+
+      .form-group textarea{
+        max-width: 95%;
+      }
+      
+
+      
+      /* Scrollbar */
+
+
+      /* Applies to all scrollbars in WebKit-based browsers */
+      ::-webkit-scrollbar {
+        width: 10px;
+        height: 10px;
+      }
+
+      ::-webkit-scrollbar-track {
+        background-color: #1a1a1a;
+        border-radius: 10px;
+      }
+
+      ::-webkit-scrollbar-thumb {
+        background-color: #555;
+        border-radius: 10px;
+        border: 2px solid #1a1a1a; /* creates spacing around thumb */
+        transition: background-color 0.3s ease;
+      }
+
+      ::-webkit-scrollbar-thumb:hover {
+        background-color: #888;
+      }
+
+      /* Optional: Fade into background */
+      ::-webkit-scrollbar-corner {
+        background-color: transparent;
+      }
+
+
+      .form-section {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        width: 100%;
+      }
+
+
+
+
+
+      select[multiple], textarea, select, input[type="text"] {
+        width: 100%;
+        padding: 0.5rem;
+        border-radius: 5px;
+        border: 1px solid #666;
+        background: black;
+        color: white;
+        font-size: 16px;
+      }
+      
+
+
+
+      .button-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 1rem;
+      }
+      button {
+        padding: 0.5rem 1.5rem;
+        border-radius: 5px;
+        font-weight: bold;
+        border: none;
+        cursor: pointer;
+      }
+      
+
+
+
+      .preview-box {
+        margin-top: 1rem;
+        background: black;
+        border: 1px solid #666;
+        border-radius: 8px;
+        height: 430px;
+        overflow: auto;
+        position: relative;
+        cursor: grab;
+      }
+
+  .preview-canvas {
+    width: 3000px;
+    height: 3000px;
+    position: absolute;
+    top: 0;
+    left: 0;
+    transform-origin: top left;
+    transition: transform 0.05s ease-out;
+  }
+
+
+
+  .preview-image-wrapper.selected {
+    /* outline: 3px solid #4ecdc4; */
+    outline: 3px solid #6cb2eb;
+    outline-offset: -2px;
+  }
+
+  .preview-box.dragover {
+    border: 2px dashed #6cb2eb;
+  }
+
+  .preview-image-wrapper {
+    position: absolute;
+    border: 1px solid #555;
+    background: #111;
+    border-radius: 4px;
+    overflow: hidden;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.6);
+  }
+
+  .preview-image-wrapper img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    pointer-events: none;
+    user-select: none;
+  }
+
+  .preview-image-wrapper {
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    right: 0;
+    bottom: 0;
+    background: white;
+    border: 1px solid #999;
+    cursor: nwse-resize;
+    z-index: 10;
+  }
+
+  .resizer {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  right: 0;
+  bottom: 0;
+  background: white;
+  border: 2px solid #888;
+  cursor: nwse-resize;
+  z-index: 10;
+  }
+
+
+    .image-label {
+    position: absolute;
+    bottom: 4px;
+    left: 4px;
+    background: rgba(0,0,0,0.7);
+    color: white;
+    font-size: 13px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    pointer-events: none;
+    }
+
+  .selected-image {
+    outline: 3px solid #6cb2eb;
+  }
+
+
+      .moodboard {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1px;
+      }
+      .moodboard img {
+        width: 100px;
+        height: 100px;
+        object-fit: cover;
+        border-radius: 6px;
+        border: 1px solid #888;
+      }
+
+
+      button {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.4rem 1rem;
+      font-size: 16px;
+      background: white;
+      color: black;
+      border: none;
+      border-radius: 6px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.2s ease;
+      }
+
+      button:hover {
+      background: #eee;
+      }
+
+      button i {
+      font-size: 16px;
+      }
+
+
+
+
+  /* new */
+
+
+
+  .pinterest-row {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+  }
+
+  .pinterest-row input {
+    flex: 1;
+    padding: 0.5rem;
+    background-color: white;
+    color: black;
+    border-radius: 8px;
+    font-size: 16px;
+  }
+
+  .pinterest-row button {
+    background-color: #E60023;
+    color: white;
+    font-weight: bold;
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+  }
+
+  .preview-placeholder {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: #aaa;
+    font-size: 16px;
+    text-align: center;
+    pointer-events: none;
+    user-select: none;
+  }
+
+  #furniture{
+    overflow-y: auto;
+    padding-right: 0.5rem;      /* Reduce padding */
+    width: 100%;                /* Let it fill available width */
+    box-sizing: border-box;  
+  }
+
+  .output-section {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    overflow: hidden;
+    margin: 1rem;
+    padding-bottom: 2rem;
+  }
+
+  .output-main {
+    display: flex;
+    flex-grow: 1;
+    height: 100vh;
+    overflow: hidden;
+    gap: 1rem;
+    padding-right:1rem;
+    box-sizing: border-box;
+  }
+
+
+
+  .label-tag {
+    padding: 0.5rem 0.75rem;
+    border-radius: 16px;
+    font-size: 14px;
+    background-color: #666;
+    color: white;
+    display: inline-block;
+    margin: 0.25rem;
+    max-width: 220px;
+    word-break: break-word;
+    line-height: 1.3;
+  }
+
+  .label-tag .remove {
+    margin-left: 0.5rem;
+    color: #bbb;
+    cursor: pointer;
+    font-weight: bold;
+  }
+
+  .form-card {
+    background-color: #1b1b1b;
+    padding: 1rem;
+    border-radius: 10px;
+    border: 1px solid #444;
+    margin-bottom: 1rem;
+  }
+
+  .form-card-header {
+    font-weight: bold;
+    font-size: 16px;
+    margin-bottom: 0.5rem;
+    color: #ccc;
+  }
+
+
+
+
+  .prompt-wrapper {
+    flex: 0.85;
+    height: 100%;
+    overflow: auto;
+  }
+
+  .output {
+    width: 100%;
+    height: 100%;
+    resize: none;
+    /* padding: 1rem; */
+    font-size: 16px;
+    background: black;
+    color: white;
+    border-radius: 8px;
+    border: 1px solid #555;
+    box-sizing: border-box;
+    min-height: 100%;
+  }
+
+  .labels-box {
+    width: 100%;
+    flex: 0.37;
+    background: black;
+    color: white;
+    border-radius: 8px;
+    border: 1px solid #555;
+    padding: 1rem;
+    border-radius: 10px;
+    overflow-y: auto;
+    height: 100%;
+    box-sizing: border-box;
+    display: flex;
+    flex-wrap: wrap;            /* Wrap tags to new lines */
+    gap: 0.5rem;                /* Space between tags */
+    align-content: flex-start;
+  }
+
+  .label-tag .remove {
+    margin-left: 0.5rem;
+    color: #bbb;
+    cursor: pointer;
+    font-weight: bold;
+  }
+
+  .output-top {
+    flex: 0 0 auto;
+    margin-bottom: 0.5rem;
+  }
+
+  .output-middle {
+    flex: 1 1 auto;
+    overflow: auto;
+  }
+
+  .output-bottom {
+    flex: 0 0 auto;
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    padding-top: 0.5rem;
+    margin-right: 1rem;
+    margin-top: 1rem;
+  }
+
+  .form-group {
+    margin-bottom: 1.5rem;
+    background-color: #111;
+    padding: 1rem;
+    border: 1px solid #444;
+    border-radius: 8px;
+  }
+
+  .form-group h3 {
+    margin-top: 0.25rem;
+    padding-bottom: 0.5rem;
+    font-size: 18px;
+    font-weight: bold;
+    color: #fff;
+    border-bottom: 2px solid #555; /* Draw the horizontal line */
+  }
+
+
+
+
+  label {
+    display: block;
+    margin-top: 1rem;
+    margin-bottom: 0.5rem;
+    font-weight: bold;
+    color: #ccc;
+  }
+
+  select[multiple] {
+    width: 100%;
+    height: auto;
+    padding: 0.5rem;
+    background-color: black;
+    color: white;
+    border: 1px solid #666;
+    border-radius: 5px;
+  }
+
+  .label-tag .remove {
+    margin-left: 0.5rem;
+    color: #ccc;
+    font-weight: bold;
+    cursor: pointer;
+  }
+
+
+    </style>
+  </head>
+  <body>
+  <!-- <h1>Photorealistic Office Render Prompt Builder</h1> -->
+  <div class="container">
+    <div class="scrollable-form">
+      <div id="formContainer" class="form-section"></div>
+    </div>
+
+    <div class="output-section">
+      <div class="button-row">
+        <button onclick="exportToChatGPT()"
+          style="background: #10a37f; color: white; padding: 0.5rem 1rem; border-radius: 6px;">
+          Open in ChatGPT
+        </button>
+      </div>
+
+      <div class="output-main">
+        <div class="prompt-wrapper">
+          <textarea class="output" id="finalPrompt"></textarea>
+        </div>
+
+        <div class="labels-box" id="labelsBox">
+          <!-- labels get injected here -->
+        </div>
+      </div>
+
+      <div class="output-bottom pinterest-row">
+        <input type="text" id="pinterestSearch" placeholder="Search query for Pinterest" readonly />
+        <button
+          onclick="window.open('https://www.pinterest.com/search/pins/?q=' + encodeURIComponent(document.getElementById('pinterestSearch').value))">
+          Open in Pinterest
+        </button>
+      </div>
+    </div>
+  </div>
+
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.0/jszip.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.2/papaparse.min.js"></script>
+
+
+  <script>
+
+
+  function normalizeId(name) {
+    return name.replace(/\s+/g, '').toLowerCase();
+  }
+    
+  const sheetURL = 'https://docs.google.com/spreadsheets/d/1qXN1MR1pW3laS1wH_FI3vPblg3ANcqCMWVoGl0H7wek/export?format=csv';
+
+  window.onload = async function () {
+
+    const response = await fetch(sheetURL);
+    const csvText = await response.text();
+    const parsed = Papa.parse(csvText, { header: false });
+    const data = parsed.data;
+
+    const parentHeaders = data[0];
+    const childHeaders = data[1];
+    const contentRows = data.slice(2);
+
+    const grouped = {};
+    childHeaders.forEach((child, i) => {
+      const parent = parentHeaders[i]?.trim();
+      if (!parent || !child) return;
+      if (!grouped[parent]) grouped[parent] = [];
+      grouped[parent].push({ name: child.trim(), index: i });
+    });
+
+    const container = document.getElementById('formContainer');
+
+    for (const [parent, children] of Object.entries(grouped)) {
+      const group = document.createElement('div');
+      group.className = 'form-group';
+
+      const header = document.createElement('h3');
+      header.textContent = parent;
+      group.appendChild(header);
+
+      children.forEach(({ name, index }) => {
+    const label = document.createElement('label');
+    label.setAttribute('for', name);
+    label.textContent = name;
+    group.appendChild(label);
+
+    const id = normalizeId(name);
+    const allValues = contentRows.map(row => row[index]?.trim()).filter(v => !!v);
+    const uniqueOptions = [...new Set(allValues)];
+
+    let fieldElement;
+
+    if (uniqueOptions.length === 0) {
+      // Render textarea for empty column
+      const textarea = document.createElement('textarea');
+      textarea.setAttribute('id', id);
+      textarea.setAttribute('rows', 4);
+      textarea.placeholder = 'Enter value here';
+      textarea.addEventListener('input', () => {
+        generatePrompt();
+        updateStructuredView();
+      });
+      fieldElement = textarea;
+    } else {
+      // Render multi-select
+      const select = document.createElement('select');
+      select.setAttribute('id', id);
+      select.setAttribute('multiple', true);
+      select.style.marginBottom = '1rem';
+
+      uniqueOptions.forEach(value => {
+        const opt = document.createElement('option');
+        opt.value = value;
+        opt.textContent = value;
+        select.appendChild(opt);
+      });
+
+      select.addEventListener('change', () => {
+        moveSelectedOptionsToTop(select);
+        generatePrompt();
+        updateStructuredView();
+        updatePinterestQuery();
+
+      });
+
+      fieldElement = select;
+    }
+
+    group.appendChild(fieldElement);
+
+
+    
+  });
+
+
+      container.appendChild(group);
+    }
+
+    
+  };
+
+
+  document.getElementById('labelsBox').addEventListener('click', function (e) {
+    if (e.target.classList.contains('remove')) {
+      const tag = e.target.closest('.label-tag');
+      const field = tag.getAttribute('data-field');
+      const value = tag.getAttribute('data-value');
+      if (field && value) {
+        removeLabel(field, value);
+      }
+    }
+  });
+
+  function getLabelledImages() {
+    return Array.from(document.querySelectorAll('.preview-image-wrapper')).map(wrapper => {
+      const img = wrapper.querySelector('img');
+      const label = wrapper.querySelector('.image-label')?.innerText?.trim();
+      if (img && label) {
+        return { label, file: dataURLtoFile(img.src, `${label}.png`) };
+      }
+      return null;
+    }).filter(Boolean);
+  }
+
+  function dataURLtoFile(dataurl, filename) {
+    const arr = dataurl.split(',');
+    const mime = arr[0].match(/:(.*?);/)[1];
+    const bstr = atob(arr[1]);
+    let n = bstr.length;
+    const u8arr = new Uint8Array(n);
+    while (n--) u8arr[n] = bstr.charCodeAt(n);
+    return new File([u8arr], filename, { type: mime });
+  }
+
+
+    async function exportToChatGPT() {
+    const prompt = document.getElementById('finalPrompt').value;
+    const wrappers = document.querySelectorAll('.preview-image-wrapper');
+
+      const labelled = Array.from(wrappers)
+        .filter(wrapper => wrapper.querySelector('.image-label') && wrapper.querySelector('img'))
+        .map(wrapper => {
+          const label = wrapper.querySelector('.image-label').textContent.trim();
+          const img = wrapper.querySelector('img');
+          const base64 = img.src.split(',')[1]; // Extract base64 only
+          return { label, base64 };
+        });
+
+      if (labelled.length === 0) {
+      // Proceed without images
+      const prompt = document.getElementById('finalPrompt').value;
+      const chatGPTURL = `https://chat.openai.com/?prompt=${encodeURIComponent(prompt)}`;
+      window.open(chatGPTURL, "_blank");
+      return;
+      }
+
+
+      const uploads = await Promise.all(labelled.map(async ({ label, base64 }) => {
+        try {
+          const res = await fetch("https://api.imgbb.com/1/upload", {
+            method: "POST",
+            body: new URLSearchParams({
+              key: "e4440d61f8e0b97bfe979bf8995476c2", // your API key
+              image: base64
+            })
+          });
+          const data = await res.json();
+          if (data.success) {
+            const url = data.data.url;
+            return `\n ${label} :${url}`;
+          } else {
+            return `**${label}**: (upload failed)`;
+          }
+        } catch (e) {
+          return `**${label}**: (upload error)`;
+        }
+      }));
+
+    const combinedPrompt = `${prompt}\n\n${uploads.join("\n\n")}`;
+    const chatGPTURL = `https://chat.openai.com/?prompt=${encodeURIComponent(combinedPrompt)}`;
+    window.open(chatGPTURL, "_blank");
+  }
+
+  // Normalize select options to keep selected at the top
+  function moveSelectedOptionsToTop(selectElement) {
+    const selected = Array.from(selectElement.selectedOptions);
+    const unselected = Array.from(selectElement.options).filter(opt => !opt.selected);
+
+    selectElement.innerHTML = '';
+
+    selected.forEach(opt => {
+      const o = new Option(opt.text, opt.value, false, true);
+      selectElement.appendChild(o);
+    });
+
+    unselected.forEach(opt => {
+      const o = new Option(opt.text, opt.value, false, false);
+      selectElement.appendChild(o);
+    });
+  }
+
+  // Hook moveSelectedOptionsToTop on all select changes
+  function attachMoveSelectedTop() {
+    document.querySelectorAll('select[multiple]').forEach(select => {
+      select.addEventListener('change', () => moveSelectedOptionsToTop(select));
+    });
+  }
+
+  // Ensure it's run after dynamic form generation
+  setTimeout(attachMoveSelectedTop, 1000);
+
+
+    function openInChatGPT() {
+    const prompt = document.getElementById('finalPrompt').value.trim();
+    if (!prompt) {
+      alert("Prompt is empty!");
+      return;
+    }
+    const encodedPrompt = encodeURIComponent(prompt);
+    const chatURL = `https://chat.openai.com/?model=text-davinci-003&prompt=${encodedPrompt}`;
+    window.open(chatURL, '_blank');
+  }
+
+    document.querySelectorAll('select, textarea').forEach(el => {
+    el.addEventListener('change', generatePrompt);
+  });
+
+  function updatePreviewPlaceholder() {
+    const hasImages = document.querySelectorAll('#canvas .preview-image-wrapper').length > 0;
+    document.getElementById('previewPlaceholder').style.display = hasImages ? 'none' : 'block';
+  }
+
+
+    
+    function getMultiSelect(id) {
+      return Array.from(document.getElementById(id)?.selectedOptions || []).map(opt => opt.value);
+    }
+
+  function generatePrompt() {
+    const allFields = document.querySelectorAll('.form-group select[multiple], .form-group textarea');
+    const promptSections = [];
+    const grouped = {};
+
+    allFields.forEach(el => {
+      const parentGroup = el.closest('.form-group');
+      if (!parentGroup) return;
+
+      const parentSection = parentGroup.querySelector('h3')?.textContent?.trim() || 'General';
+      const fieldLabel = el.previousElementSibling?.textContent?.trim();
+
+      let selectedValues = [];
+      if (el.tagName === 'SELECT' && el.multiple) {
+        selectedValues = Array.from(el.selectedOptions).map(opt => opt.value.trim()).filter(Boolean);
+      } else if (el.tagName === 'TEXTAREA') {
+        const val = el.value.trim();
+        if (val) selectedValues = [val];
+      }
+
+      if (!selectedValues.length) return;
+
+      if (!grouped[parentSection]) grouped[parentSection] = [];
+      grouped[parentSection].push({ field: fieldLabel, values: selectedValues });
+    });
+
+    for (const [section, fields] of Object.entries(grouped)) {
+      let sectionText = `${section}:\n`;
+      fields.forEach(({ field, values }) => {
+        sectionText += `• ${field}: ${values.join(', ')}\n`;
+      });
+      promptSections.push(sectionText);
+    }
+
+    const result = `Create a photorealistic image with the following specifications:\n\n${promptSections.join('\n')}\nEnsure ambient lighting creates a sophisticated and welcoming feel.`;
+
+    document.getElementById('finalPrompt').value = result;
+  }
+
+  setTimeout(() => {
+    document.querySelectorAll('select[multiple]').forEach(select => {
+      select.addEventListener('change', generatePrompt);
+    });
+  }, 500); // slight delay to wait for selects to render
+
+
+  function updateStructuredView() {
+    const groupedContainer = document.getElementById('labelsBox');
+    groupedContainer.innerHTML = '';
+
+    const formGroups = document.querySelectorAll('.form-group');
+    formGroups.forEach(group => {
+      const header = group.querySelector('h3');
+      if (!header) return;
+      const groupTitle = header.textContent.trim();
+      const fields = group.querySelectorAll('select, textarea');
+
+      const selectedValues = [];
+      fields.forEach(el => {
+        const fieldId = el.id;
+        if (el.tagName === 'SELECT' && el.multiple) {
+          Array.from(el.selectedOptions).forEach(opt => {
+            selectedValues.push({ field: fieldId, value: opt.value.trim() });
+          });
+        } else if ((el.tagName === 'TEXTAREA' || el.tagName === 'INPUT') && el.value.trim()) {
+          selectedValues.push({ field: fieldId, value: el.value.trim() });
+        }
+      });
+
+      if (selectedValues.length === 0) return;
+
+      const section = document.createElement('div');
+      section.classList.add('form-card');
+
+      const title = document.createElement('div');
+      title.classList.add('form-card-header');
+      title.textContent = groupTitle;
+      section.appendChild(title);
+
+      selectedValues.forEach(({ field, value }) => {
+        const tag = document.createElement('span');
+        tag.className = 'label-tag';
+        tag.setAttribute('data-field', normalizeId(field));
+        tag.setAttribute('data-value', value);
+        tag.innerHTML = `${value} <span class="remove" style="cursor:pointer;">×</span>`;
+        section.appendChild(tag);
+      });
+
+      groupedContainer.appendChild(section);
+    });
+  }
+    function copyToClipboard() {
+      const text = document.getElementById('finalPrompt').value;
+      navigator.clipboard.writeText(text).then(() => alert('Copied!'));
+    }
+      const scrollableForm = document.querySelector('.scrollable-form');
+      
+      const outputSection = document.querySelector('.output-section');
+    
+      // outputSection.addEventListener('wheel', function (e) {
+      //   if (scrollableForm) {
+      //     scrollableForm.scrollBy({
+      //       top: e.deltaY,
+      //       behavior: 'auto'
+      //     });
+      //   }
+      //   e.preventDefault(); // prevent scroll on right side
+      // }, { passive: false });
+
+      const canvas = document.getElementById('canvas');
+      let scale = 1;
+      let isDraggingCanvas = false;
+      let canvasOffsetX = 0, canvasOffsetY = 0, dragStartX = 0, dragStartY = 0;
+    
+
+  async function handleSearch(selectElement, context) {
   
-</body>
-</html>
+    }
+    
+    function updateLabels() {
+    const keys =
+    ['officeSpaceType','intendedUse','designStyle','people','furniture','materials','accentMaterials','primaryColor','accentColors','lightingType','lightingElements'];
+    const labelsBox = document.getElementById('labelsBox');
+    labelsBox.innerHTML = '';
+    keys.forEach(id => {
+    const el = document.getElementById(id);
+    let values = [];
+
+    if (el.tagName === 'SELECT' && el.multiple) {
+    values = Array.from(el.selectedOptions).map(opt => opt.value); // ordered
+    } else {
+    values = [el.value];
+    }
+    values.forEach(val => {
+    if (val && val.trim()) {
+    const span = document.createElement('span');
+    span.className = 'label-tag label-' + id;
+    span.setAttribute('data-field', id);
+    span.setAttribute('data-value', val);
+    span.innerHTML = `${val}<span class="remove" style="margin-left:8px;cursor:pointer;">×</span>`;
+    labelsBox.appendChild(span);
+
+
+
+    }
+    });
+    });
+
+    }
+
+  function removeLabel(id, value) {
+    const el = document.getElementById(normalizeId(id));
+    if (!el) return;
+
+    if (el.tagName === 'SELECT' && el.multiple) {
+      Array.from(el.options).forEach(opt => {
+        if (opt.value === value) opt.selected = false;
+      });
+    } else {
+      el.value = '';
+    }
+
+    updateStructuredView();
+    generatePrompt();
+  }
+
+
+ function updatePinterestQuery() {
+  const getValueByLabel = (labelText) => {
+    const id = normalizeId(labelText);
+    const el = document.getElementById(id);
+    if (!el) return '';
+
+    if (el.tagName === 'SELECT' && el.multiple) {
+      return el.selectedOptions.length ? el.selectedOptions[0].value.trim() : '';
+    }
+    if (el.tagName === 'TEXTAREA') {
+      return el.value.trim();
+    }
+    return '';
+  };
+
+  const business = getValueByLabel('Business type');
+  const brandcolor = getValueByLabel('Brand Color');
+  const ambience = getValueByLabel('Ambience Preference');
+  const emotion = getValueByLabel('Emotion');
+  const accent = getValueByLabel('Accent Color');
+  const primary = getValueByLabel('Primary Material');
+  const accentMat = getValueByLabel('Accent Material');
+  const lightingElements = getValueByLabel('Lighting Elements');
+  const flooring = getValueByLabel('Flooring Type');
+  const ceiling = getValueByLabel('Ceiling Treatment');
+
+  const design = getValueByLabel('Design Style');
+  const office = getValueByLabel('Office Space Type');
+  const color = getValueByLabel('Primary Color');
+  const lighting = getValueByLabel('Lighting Type');
+
+  const parts = [];
+  if (design) parts.push(`${design} office`);
+  if (office) parts.push(office);
+  if (emotion) parts.push(`${emotion} vibe`);
+  if (ambience) parts.push(`${ambience} mood`);
+  if (color) parts.push(`with ${color} as primary color`);
+  if (lighting) parts.push(`and ${lighting} lighting`);
+  if (lightingElements) parts.push(`using ${lightingElements}`);
+  if (flooring) parts.push(`on ${flooring} flooring`);
+  if (ceiling) parts.push(`with ${ceiling} ceiling`);
+  if (primary) parts.push(`featuring ${primary} surfaces`);
+  if (accentMat) parts.push(`and ${accentMat} details`);
+  if (accent) parts.push(`plus ${accent} accents`);
+  if (brandcolor) parts.push(`brand colors: ${brandcolor}`);
+  if (business) parts.push(`${business} environment`);
+
+  document.getElementById('pinterestSearch').value = parts.join(' ');
+}
+
+
+  document.querySelectorAll('select, textarea').forEach(el => {
+    el.addEventListener('change', () => {
+      generatePrompt();
+      updateStructuredView();
+      updatePinterestQuery();  // ✅ ensure it runs after all updates
+    });
+    if (el.tagName === 'TEXTAREA') {
+      el.addEventListener('input', () => {
+        generatePrompt();
+        updateStructuredView();
+        updatePinterestQuery();  // ✅ input handler for textarea
+      });
+    }
+  });
+
+
+  </script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+
+
+    
+  </body>
+  </html>
