@@ -511,7 +511,7 @@
 
     });
 
-
+      // 
 
       function normalizeId(name) {
         return name.replace(/\s+/g, '').toLowerCase();
@@ -882,13 +882,15 @@
           return Array.from(document.getElementById(id)?.selectedOptions || []).map(opt => opt.value);
         }
 
+        
     function generatePrompt() {
       const get = (label) => {
         const el = document.getElementById(normalizeId(label));
         if (!el) return '';
         if (el.tagName === 'SELECT' && el.multiple) {
-          return el.selectedOptions.length ? el.selectedOptions[0].value.trim() : '';
+        return Array.from(el.selectedOptions).map(opt => opt.value.trim()).join(' ');
         }
+
         if (el.tagName === 'TEXTAREA' || el.tagName === 'INPUT') {
           return el.value.trim();
         }
@@ -919,16 +921,52 @@
 
       const lines = [];
 
+
+
+
     // Opening line (always shows something)
 
-    if (budget) {
-      lines.push(`With a budget of ${budget} per sqft.`);
+    
+
+
+
+    const formatList = (arr) => {
+    if (arr.length === 1) return arr[0];
+    if (arr.length === 2) return arr.join(' and ');
+    return arr.slice(0, -1).join(', ') + ', and ' + arr[arr.length - 1];
+    };
+
+    const businessValues = getMultiSelect('businesstype');
+    const spaceValues = getMultiSelect('spacetype');
+    const designValues = getMultiSelect('designstyle');
+    const flooringValues = getMultiSelect('flooringtype');
+    const ceilingValues = getMultiSelect('ceilingtreatment');
+    const storageValues = getMultiSelect('storageneeds');
+    const primaryMatValues = getMultiSelect('primarymaterial');
+    const accentMatValues = getMultiSelect('accentmaterial');
+    const biophiliaValues = getMultiSelect('biophilicfeatures');
+    const lightingValues = getMultiSelect('lightingtype');
+    const lightingDetailValues = getMultiSelect('lightingelements');
+    const useValues = getMultiSelect('intendedusecase');
+    const emotionValues = getMultiSelect('emotion');
+    const primaryColorValues = getMultiSelect('primarycolor');
+    const accentColorValues = getMultiSelect('accentcolor');
+    const budgetValues = getMultiSelect('budget');
+    const occupancyValues = getMultiSelect('occupancy');
+
+    if (budgetValues.length) {
+    lines.push(`With a budget of ${formatList(budgetValues)} per sqft.`);
     }
 
 
-    if (space && business) {
-      lines.push(`Create a photorealistic render of a ${space} designed for a ${business} business.`);
+    if (spaceValues.length && businessValues.length) {
+    lines.push(`Create a photorealistic render of ${formatList(spaceValues)} designed for ${formatList(businessValues)} businesses.`);
+    } else if (spaceValues.length) {
+    lines.push(`Create a photorealistic render of ${formatList(spaceValues)}.`);
+    } else if (businessValues.length) {
+    lines.push(`${formatList(businessValues)} business.`);
     }
+
     else if (space) {
       lines.push(`Create a photorealistic render of a ${space}`);
     } else if (business) {
@@ -938,44 +976,44 @@
 
 
     // Occupancy + Layout handling
-    if (occupancy && layout) {
-      lines.push(`The space should accommodate approximately ${occupancy} people with a ${layout} layout.`);
-    } else if (occupancy) {
-      lines.push(`The space should accommodate approximately ${occupancy} people.`);
-    } else if (layout) {
-      lines.push(`The space uses a ${layout} layout.`);
+    if (occupancyValues.length && layout) {
+    lines.push(`The space should accommodate approximately ${formatList(occupancyValues)} people with a ${layout}
+    layout.`);
+    } else if (occupancyValues.length) {
+    lines.push(`The space should accommodate approximately ${formatList(occupancyValues)} people.`);
     }
 
+
     // Design style
-    if (design) {
-      lines.push(`It reflects a ${design} design sensibility.`);
+    if (designValues.length) {
+      lines.push(`It reflects a ${formatList(designValues)} design sensibility.`);
     }
 
     // Flooring + Ceiling
-    if (flooring && ceiling) {
-      lines.push(`Use a ${flooring} floor and incorporate ${ceiling} into the overhead design.`);
-    } else if (flooring) {
-      lines.push(`Use a ${flooring} floor throughout the space.`);
-    } else if (ceiling) {
-      lines.push(`Incorporate ${ceiling} into the overhead design.`);
+    if (flooringValues.length && ceilingValues.length) {
+      lines.push(`Use ${formatList(flooringValues)} flooring and incorporate ${formatList(ceilingValues)} into the ceiling design.`);
+    } else if (flooringValues.length) {
+      lines.push(`Use ${formatList(flooringValues)} flooring throughout the space.`);
+    } else if (ceilingValues.length) {
+      lines.push(`Incorporate ${formatList(ceilingValues)} into the ceiling design.`);
     }
 
     // Storage
-    if (storage) {
-      lines.push(`If needed, include ${storage} that supports the space's function.`);
+    if (storageValues.length) {
+      lines.push(`If needed, include ${formatList(storageValues)} that supports the space's function.`);
     }
 
     // Colors + Materials
-    const hasColorMaterial = brandColor || primaryColor || accentColor || primaryMat || accentMat;
+    const hasColorMaterial = brandColor || primaryColor || accentColor || primaryMatValues.length || accentMatValues.length;
     if (hasColorMaterial) {
       let colorLine = 'Incorporate brand-aligned visual direction';
       if (brandColor) colorLine += ` considering ${brandColor} as the brand color`;
-      if (primaryColor) colorLine += ` using ${primaryColor} as primary color`;
-      if (accentColor) colorLine += ` and ${accentColor} for the accents`;
-      if (primaryMat || accentMat) {
+      if (primaryColorValues.length) colorLine += ` using ${formatList(primaryColorValues)} as primary color`;
+      if (accentColorValues.length) colorLine += ` and ${formatList(accentColorValues)} for the accents`;
+      if (primaryMatValues.length || accentMatValues.length) {
         colorLine += ', and apply';
-        if (primaryMat) colorLine += ` ${primaryMat} as primary`;
-        if (accentMat) colorLine += ` and ${accentMat} as accent material`;
+        if (primaryMatValues.length) colorLine += ` ${formatList(primaryMatValues)} as primary`;
+        if (accentMatValues.length) colorLine += ` and ${formatList(accentMatValues)} as accent material`;
         colorLine += ' across key surfaces and furniture';
       }
       colorLine += '.';
@@ -983,24 +1021,26 @@
     }
 
     // Use + Ambience + Emotion
-    if (use || ambience || emotion) {
-      let line = 'The intended use case is ';
-      line += use || '[Intended Use Case]';
-      if (ambience) line += `, and the visual ambience should feel ${ambience}`;
-      if (emotion) line += `, conveying a sense of ${emotion} tone`;
+    if (useValues.length || ambience || emotionValues.length) {
+    let line = 'The intended use case is ';
+    line += useValues.length ? formatList(useValues) : '[Intended Use Case]';
+    if (ambience) line += `, and the visual ambience should feel ${ambience}`;
+    if (emotionValues.length) line += `, conveying a sense of ${formatList(emotionValues)} tone`;
+    line += '.';
+    lines.push(line);
+    }
+
+
+    // Biophilic Features + Lighting Types + Lighting Elements
+    if (biophiliaValues.length || lightingValues.length || lightingDetailValues.length) {
+      let line = 'If possible, include';
+      if (biophiliaValues.length) line += ` ${formatList(biophiliaValues)}`;
+      if (lightingValues.length) line += ` and ensure lighting is handled through ${formatList(lightingValues)}`;
+      if (lightingDetailValues.length) line += ` with details like ${formatList(lightingDetailValues)}`;
       line += '.';
       lines.push(line);
     }
 
-    // Biophilic + Lighting + Elements
-    if (biophilia || lighting || lightingDetail) {
-      let line = 'If possible, include';
-      if (biophilia) line += ` ${biophilia}`;
-      if (lighting) line += ` and ensure lighting is handled through ${lighting}`;
-      if (lightingDetail) line += ` with details like ${lightingDetail}`;
-      line += '.';
-      lines.push(line);
-    }
 
     // Final ambience reinforcement
     if (ambient) {
@@ -1156,83 +1196,167 @@
 
         }
 
-      function removeLabel(id, value) {
-        const el = document.getElementById(normalizeId(id));
-        if (!el) return;
-
-        if (el.tagName === 'SELECT' && el.multiple) {
-          Array.from(el.options).forEach(opt => {
-            if (opt.value === value) opt.selected = false;
-          });
-        } else {
-          el.value = '';
-        }
-
-        updateStructuredView();
-        generatePrompt();
-      }
-
-
-    function updatePinterestQuery() {
-      const getValueByLabel = (labelText) => {
-        const id = normalizeId(labelText);
-        const el = document.getElementById(id);
-        if (!el) return '';
-
-        if (el.tagName === 'SELECT' && el.multiple) {
-          return el.selectedOptions.length ? el.selectedOptions[0].value.trim() : '';
-        }
-        if (el.tagName === 'TEXTAREA') {
-          return el.value.trim();
-        }
-        return '';
-      };
-
-      const business = getValueByLabel('Business type');
-      const brandcolor = getValueByLabel('Brand Color');
-      const ambience = getValueByLabel('Ambience Preference');
-      const emotion = getValueByLabel('Emotion');
-      const accent = getValueByLabel('Accent Color');
-      const primary = getValueByLabel('Primary Material');
-      const accentMat = getValueByLabel('Accent Material');
-      const lightingElements = getValueByLabel('Lighting Elements');
-      const flooring = getValueByLabel('Flooring Type');
-      const ceiling = getValueByLabel('Ceiling Treatment');
-      const design = getValueByLabel('Design Style');
-      const office = getValueByLabel('Office Space Type');
-      const color = getValueByLabel('Primary Color');
-      const lighting = getValueByLabel('Lighting Type');
-
-      const parts = [];
-
-      if (design && office) {
-        parts.push(`${design} style ${office}`);
-      } else if (design) {
-        parts.push(`${design} interior`);
-      } else if (office) {
-        parts.push(`${office} space`);
-      }
-
-      if (business) parts.push(`for ${business} use`);
-      if (emotion) parts.push(`${emotion} vibe`);
-      if (ambience) parts.push(`${ambience} mood`);
-      if (color) parts.push(`${color} palette`);
-      if (brandcolor) parts.push(`brand tone ${brandcolor}`);
-      if (lighting) parts.push(`${lighting} lighting`);
-      if (lightingElements) parts.push(`with ${lightingElements}`);
-      if (flooring) parts.push(`${flooring} flooring`);
-      if (ceiling) parts.push(`${ceiling} ceiling`);
-      if (primary) parts.push(`${primary} surfaces`);
-      if (accentMat) parts.push(`${accentMat} highlights`);
-      if (accent) parts.push(`${accent} accents`);
-
-      const searchBox = document.getElementById('pinterestSearch');
-      if (parts.length === 0) {
-        searchBox.value = 'photorealistic office interior inspiration';
-      } else {
-        searchBox.value = parts.join(' ');
-      }
+        function updatePinterestSearchInput() {
+          const allLabels = document.querySelectorAll('.right-panel .label-group .label span');
+          const keywords = Array.from(allLabels).map(el => el.textContent.trim()).join(' ');
+          document.querySelector('#searchBoxContainer input').value = keywords;
     }
+
+      function removeLabel(id, value) {
+      const el = document.getElementById(normalizeId(id));
+      if (!el) return;
+
+      if (el.tagName === 'SELECT' && el.multiple) {
+      Array.from(el.options).forEach(opt => {
+      if (opt.value === value) opt.selected = false;
+      });
+      } else {
+      el.value = '';
+      }
+
+      updateStructuredView();
+      generatePrompt();
+      updatePinterestQuery(); // ✅ Use this instead of updatePinterestSearchInput()
+      }
+
+    
+    function updatePinterestQuery() {
+    const getValueByLabel = (labelText) => {
+    const id = normalizeId(labelText);
+    const el = document.getElementById(id);
+    if (!el) return [];
+
+    if (el.tagName === 'SELECT' && el.multiple) {
+    return Array.from(el.selectedOptions).map(opt => opt.value.trim()).filter(Boolean);
+    }
+
+    if (el.tagName === 'TEXTAREA') {
+    const val = el.value.trim();
+    return val ? [val] : [];
+    }
+
+    return [];
+    };
+
+    // Get multi-value arrays
+    const business = getValueByLabel('Business type');
+    const brandcolor = getValueByLabel('Brand Color');
+    const ambience = getValueByLabel('Ambience Preference');
+    const emotion = getValueByLabel('Emotion');
+    const accent = getValueByLabel('Accent Color');
+    const primary = getValueByLabel('Primary Material');
+    const accentMat = getValueByLabel('Accent Material');
+    const lightingElements = getValueByLabel('Lighting Elements');
+    const flooring = getValueByLabel('Flooring Type');
+    const ceiling = getValueByLabel('Ceiling Treatment');
+    const design = getValueByLabel('Design Style');
+    const office = getValueByLabel('Office Space Type');
+    const color = getValueByLabel('Primary Color');
+    const lighting = getValueByLabel('Lighting Type');
+
+    const parts = [];
+
+    // Compose style + space combinations
+    if (design.length && office.length) {
+    design.forEach(d => {
+    office.forEach(o => {
+    parts.push(`${d} style ${o}`);
+    });
+    });
+    } else if (design.length) {
+    parts.push(...design.map(d => `${d} interior`));
+    } else if (office.length) {
+    parts.push(...office.map(o => `${o} space`));
+    }
+
+    // Append individual fields
+    parts.push(...business);
+    parts.push(...emotion);
+    parts.push(...ambience);
+    parts.push(...color);
+    parts.push(...brandcolor);
+    parts.push(...lighting);
+    parts.push(...lightingElements);
+    parts.push(...flooring);
+    parts.push(...ceiling);
+    parts.push(...primary);
+    parts.push(...accentMat);
+    parts.push(...accent);
+
+    // Final Pinterest query string
+    const searchBox = document.getElementById('pinterestSearch');
+    if (parts.length === 0) {
+    searchBox.value = 'photorealistic office interior inspiration';
+    } else {
+    searchBox.value = parts.join(' ');
+    }
+    }
+
+
+    // function updatePinterestQuery() {
+    //   const getValueByLabel = (labelText) => {
+    //   const id = normalizeId(labelText);
+    //   const el = document.getElementById(id);
+    //   if (!el) return [];
+
+    //   if (el.tagName === 'SELECT' && el.multiple) {
+    //   return Array.from(el.selectedOptions).map(opt => opt.value.trim()).filter(Boolean);
+    //   }
+
+    //   if (el.tagName === 'TEXTAREA') {
+    //   const val = el.value.trim();
+    //   return val ? [val] : [];
+    //   }
+
+    //   return [];
+    //   };
+
+
+    //   const business = getValueByLabel('Business type');
+    //   const brandcolor = getValueByLabel('Brand Color');
+    //   const ambience = getValueByLabel('Ambience Preference');
+    //   const emotion = getValueByLabel('Emotion');
+    //   const accent = getValueByLabel('Accent Color');
+    //   const primary = getValueByLabel('Primary Material');
+    //   const accentMat = getValueByLabel('Accent Material');
+    //   const lightingElements = getValueByLabel('Lighting Elements');
+    //   const flooring = getValueByLabel('Flooring Type');
+    //   const ceiling = getValueByLabel('Ceiling Treatment');
+    //   const design = getValueByLabel('Design Style');
+    //   const office = getValueByLabel('Office Space Type');
+    //   const color = getValueByLabel('Primary Color');
+    //   const lighting = getValueByLabel('Lighting Type');
+
+    //   const parts = [];
+
+    //   if (design && office) {
+    //     parts.push(`${design} ${office}`);
+    //   } else if (design) {
+    //     parts.push(`${design}`);
+    //   } else if (office) {
+    //     parts.push(`${office}`);
+    //   }
+
+    //   if (business) parts.push(`${business}`);
+    //   if (emotion) parts.push(`${emotion}`);
+    //   if (ambience) parts.push(`${ambience}`);
+    //   if (color) parts.push(`${color}`);
+    //   if (brandcolor) parts.push(`${brandcolor}`);
+    //   if (lighting) parts.push(`${lighting}`);
+    //   if (lightingElements) parts.push(`${lightingElements}`);
+    //   if (flooring) parts.push(`${flooring}`);
+    //   if (ceiling) parts.push(`${ceiling}`);
+    //   if (primary) parts.push(`${primary}`);
+    //   if (accentMat) parts.push(`${accentMat}`);
+    //   if (accent) parts.push(`${accent}`);
+
+    //   const searchBox = document.getElementById('pinterestSearch');
+    //   if (parts.length === 0) {
+    //     searchBox.value = 'photorealistic office interior inspiration';
+    //   } else {
+    //     searchBox.value = parts.join(' ');
+    //   }
+    // }
 
     document.querySelectorAll('select, textarea').forEach(el => {
       if (el.id === 'finalPrompt') return; // ⛔️ Skip the output textarea
@@ -1251,6 +1375,21 @@
         });
       }
     });
+const observer = new MutationObserver(() => {
+  updatePinterestQuery(); // ✅ This will regenerate the search string correctly
+});
+
+
+const rightPanel = document.querySelector('.right-panel');
+  if (rightPanel) {
+    observer.observe(rightPanel, {
+    childList: true,
+    subtree: true
+  });
+}
+
+
+
 
 
       </script>
