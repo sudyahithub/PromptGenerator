@@ -1240,6 +1240,7 @@
 
     // Get multi-value arrays
     const business = getValueByLabel('Business type');
+    const space = getValueByLabel('Space type');
     const brandcolor = getValueByLabel('Brand Color');
     const ambience = getValueByLabel('Ambience Preference');
     const emotion = getValueByLabel('Emotion');
@@ -1271,6 +1272,7 @@
 
     // Append individual fields
     parts.push(...business);
+    parts.push(...space);
     parts.push(...emotion);
     parts.push(...ambience);
     parts.push(...color);
