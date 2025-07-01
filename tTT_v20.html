@@ -1,0 +1,1655 @@
+      <!DOCTYPE html>
+      <html lang="en">
+      <head>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Photorealistic Office Render Prompt Builder</title>
+        <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.2/papaparse.min.js"></script>
+        <style>
+          body {
+            font-family: Arial, sans-serif;
+            font-size: 18px;
+            padding: 1rem;
+            background-color: #111;
+            color: white;
+            overflow: hidden;
+          }
+      
+      .container {
+        display: flex;
+        height: 100vh;
+        width: 100vw;
+        overflow: hidden;
+      }
+
+      .scrollable-form {
+          padding: 1rem 0;
+          max-height: 99vh;
+          overflow-y: auto;
+          flex: 0 0 35%;
+          padding-right: 0.5rem; /* ✅ Reduce padding */
+          margin-right: 0; /* ✅ No extra margin */
+          box-sizing: border-box; /* ✅ Ensures padding doesn't add to width */
+          max-width: 20%;
+          }
+
+          .form-group textarea{
+            max-width: 95%;
+          }
+          
+
+          
+          /* Scrollbar */
+
+
+          /* Applies to all scrollbars in WebKit-based browsers */
+          ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+          }
+
+          ::-webkit-scrollbar-track {
+            background-color: #1a1a1a;
+            border-radius: 10px;
+          }
+
+          ::-webkit-scrollbar-thumb {
+            background-color: #555;
+            border-radius: 10px;
+            border: 2px solid #1a1a1a; /* creates spacing around thumb */
+            transition: background-color 0.3s ease;
+          }
+
+          ::-webkit-scrollbar-thumb:hover {
+            background-color: #888;
+          }
+
+          /* Optional: Fade into background */
+          ::-webkit-scrollbar-corner {
+            background-color: transparent;
+          }
+
+
+          .form-section {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            width: 100%;
+          }
+
+
+
+
+
+          select[multiple], textarea, select, input[type="text"] {
+            width: 100%;
+            padding: 0.5rem;
+            border-radius: 5px;
+            border: 1px solid #666;
+            background: black;
+            color: white;
+            font-size: 16px;
+          }
+          
+
+
+
+          .button-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+          }
+          button {
+            padding: 0.5rem 1.5rem;
+            border-radius: 5px;
+            font-weight: bold;
+            border: none;
+            cursor: pointer;
+          }
+          
+
+
+
+          .preview-box {
+            margin-top: 1rem;
+            background: black;
+            border: 1px solid #666;
+            border-radius: 8px;
+            height: 430px;
+            overflow: auto;
+            position: relative;
+            cursor: grab;
+          }
+
+      .preview-canvas {
+        width: 3000px;
+        height: 3000px;
+        position: absolute;
+        top: 0;
+        left: 0;
+        transform-origin: top left;
+        transition: transform 0.05s ease-out;
+      }
+
+
+
+      .preview-image-wrapper.selected {
+        /* outline: 3px solid #4ecdc4; */
+        outline: 3px solid #6cb2eb;
+        outline-offset: -2px;
+      }
+
+      .preview-box.dragover {
+        border: 2px dashed #6cb2eb;
+      }
+
+      .preview-image-wrapper {
+        position: absolute;
+        border: 1px solid #555;
+        background: #111;
+        border-radius: 4px;
+        overflow: hidden;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.6);
+      }
+
+      .preview-image-wrapper img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        pointer-events: none;
+        user-select: none;
+      }
+
+      .preview-image-wrapper {
+        position: absolute;
+        width: 16px;
+        height: 16px;
+        right: 0;
+        bottom: 0;
+        background: white;
+        border: 1px solid #999;
+        cursor: nwse-resize;
+        z-index: 10;
+      }
+
+      .resizer {
+      position: absolute;
+      width: 16px;
+      height: 16px;
+      right: 0;
+      bottom: 0;
+      background: white;
+      border: 2px solid #888;
+      cursor: nwse-resize;
+      z-index: 10;
+      }
+
+
+        .image-label {
+        position: absolute;
+        bottom: 4px;
+        left: 4px;
+        background: rgba(0,0,0,0.7);
+        color: white;
+        font-size: 13px;
+        padding: 2px 6px;
+        border-radius: 4px;
+        pointer-events: none;
+        }
+
+      .selected-image {
+        outline: 3px solid #6cb2eb;
+      }
+
+
+      /* new */
+
+
+
+      .pinterest-row {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+      }
+
+      .pinterest-row input {
+        flex: 1;
+        padding: 0.5rem;
+        background-color: white;
+        color: black;
+        border-radius: 8px;
+        font-size: 16px;
+      }
+
+      .pinterest-row button {
+        background-color: #E60023;
+        color: white;
+        font-weight: bold;
+        padding: 0.5rem 1rem;
+        border: none;
+        border-radius: 10px;
+        cursor: pointer;
+      }
+
+      .preview-placeholder {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        color: #aaa;
+        font-size: 16px;
+        text-align: center;
+        pointer-events: none;
+        user-select: none;
+      }
+
+      #furniture{
+        overflow-y: auto;
+        padding-right: 0.5rem;      /* Reduce padding */
+        width: 100%;                /* Let it fill available width */
+        box-sizing: border-box;  
+      }
+
+      .output-section {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        overflow: hidden;
+        margin: 1rem;
+        padding-bottom: 2rem;
+      }
+
+      .output-main {
+        display: flex;
+        flex-grow: 1;
+        height: 100vh;
+        overflow: hidden;
+        gap: 1rem;
+        padding-right:1rem;
+        box-sizing: border-box;
+      }
+
+
+
+      .label-tag {
+        padding: 0.5rem 0.75rem;
+        border-radius: 16px;
+        font-size: 14px;
+        background-color: #666;
+        color: white;
+        display: inline-block;
+        margin: 0.25rem;
+        max-width: 220px;
+        word-break: break-word;
+        line-height: 1.3;
+      }
+
+      .label-tag .remove {
+        margin-left: 0.5rem;
+        color: #bbb;
+        cursor: pointer;
+        font-weight: bold;
+      }
+
+      .form-card {
+        background-color: #1b1b1b;
+        padding: 1rem;
+        border-radius: 10px;
+        border: 1px solid #444;
+        margin-bottom: 1rem;
+      }
+
+      .form-card-header {
+        font-weight: bold;
+        font-size: 16px;
+        margin-bottom: 0.5rem;
+        color: #ccc;
+      }
+
+
+
+
+      .prompt-wrapper {
+        flex: 0.85;
+        height: 100%;
+        overflow: auto;
+      }
+
+      .output {
+        width: 100%;
+        height: 100%;
+        resize: none;
+        /* padding: 1rem; */
+        font-size: 16px;
+        background: black;
+        color: white;
+        border-radius: 8px;
+        border: 1px solid #555;
+        box-sizing: border-box;
+        min-height: 100%;
+      }
+
+      .labels-box {
+        width: 100%;
+        flex: 0.37;
+        background: black;
+        color: white;
+        border-radius: 8px;
+        border: 1px solid #555;
+        padding: 1rem;
+        border-radius: 10px;
+        overflow-y: auto;
+        height: 100%;
+        box-sizing: border-box;
+        display: flex;
+        flex-wrap: wrap;            /* Wrap tags to new lines */
+        gap: 0.5rem;                /* Space between tags */
+        align-content: flex-start;
+      }
+
+      .label-tag .remove {
+        margin-left: 0.5rem;
+        color: #bbb;
+        cursor: pointer;
+        font-weight: bold;
+      }
+
+      .output-top {
+        flex: 0 0 auto;
+        margin-bottom: 0.5rem;
+      }
+
+      .output-middle {
+        flex: 1 1 auto;
+        overflow: auto;
+      }
+
+      .output-bottom {
+        flex: 0 0 auto;
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+        padding-top: 0.5rem;
+        margin-right: 1rem;
+        margin-top: 1rem;
+      }
+
+      .form-group {
+        margin-bottom: 1.5rem;
+        background-color: #111;
+        padding: 1rem;
+        border: 1px solid #444;
+        border-radius: 8px;
+      }
+
+      .form-group h3 {
+        margin-top: 0.25rem;
+        padding-bottom: 0.5rem;
+        font-size: 20px;
+        font-weight: bold;
+        color: #fff;
+        margin-bottom: 1px;
+        border-bottom: 2px solid #555; /* Draw the horizontal line */
+      }
+
+      
+
+
+      .form-card-header {
+      font-weight: bold;
+      font-size: 20px;
+      margin-bottom: 0.5rem;
+      color: #ccc;
+      }
+
+
+      label {
+        display: block;
+        margin-top: 1rem;
+        margin-bottom: 0.5rem;
+        font-weight: bold;
+        color: #ccc;
+        font-size: 20px;
+      }
+
+      select[multiple] {
+        width: 100%;
+        height: auto;
+        padding: 0.5rem;
+        background-color: black;
+        color: white;
+        border: 1px solid #666;
+        border-radius: 5px;
+      }
+
+      .label-tag .remove {
+        margin-left: 0.5rem;
+        color: #ccc;
+        font-weight: bold;
+        cursor: pointer;
+      }
+
+        .grayed-out {
+      pointer-events: none;
+      opacity: 0.4;
+      transition: opacity 0.3s ease;
+    }
+
+
+    .search-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    }
+
+    
+
+    .form-card-header i.fa-pinterest {
+    margin-left: 8px;
+    transition: transform 0.2s ease;
+    }
+
+    .form-card-header i.fa-pinterest:hover {
+    transform: scale(1.2);
+    }
+
+
+    .collapsible-header {
+    font-weight: bold;
+    font-size: 22px;
+    cursor: pointer;
+    color: #ccc;
+    border-bottom: 2px solid #555;
+    padding-bottom: 1rem;
+    }
+
+
+
+.toggle-icon {
+  font-size: 16px;
+  transition: transform 0.2s ease;
+}
+
+.collapsible-content {
+  margin-top: 0.75rem;
+}
+
+.toggle-icon {
+  color: grey; /* 🌟 Teal or use #FFD700 for gold */
+  font-size: 20px;
+  transition: transform 0.2s ease;
+}
+
+.btn {
+  background-color: #00a67e;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-left: 10px;
+}
+
+#templateSelector {
+  width: 420px; /* or any width you prefer */
+  max-width: 100%;
+}
+
+
+
+
+        </style>
+      </head>
+      <body>
+      <!-- <h1>Photorealistic Office Render Prompt Builder</h1> -->
+      <div class="container">
+        <div class="scrollable-form">
+          <div id="formContainer" class="form-section"></div>
+        </div>
+
+        <div class="output-section">
+          
+          
+          <div class="button-row">
+            <button onclick="exportToChatGPT()"
+              style="background: #10a37f; color: white; padding: 0.5rem 1rem; border-radius: 6px;">
+              Open in ChatGPT
+            </button>
+            <select id="templateSelector">
+            </select>
+
+            <!-- New Button: View in Custom GPT -->
+            <!-- <button id="openCustomGPT">View in Custom GPT</button> -->
+             <button id="openCustomGPT">Open in GPT</button>
+
+<!-- <script>
+  document.getElementById("viewCustomGPT").addEventListener("click", function () {
+  const prompt = document.getElementById("finalPrompt").value.trim();
+  if (!prompt) {
+    alert("Prompt is empty!");
+    return;
+  }
+
+  sessionStorage.setItem("autoPrompt", prompt);  // ✅ sessionStorage works better across tabs for extensions
+
+  window.open("https://chatgpt.com/g/g-68512d8ce4208191b216c8344e406aea-design-brief-testing", "_blank");
+});
+
+</script> -->
+
+
+          </div>
+
+          <div class="output-main">
+            <div class="prompt-wrapper">
+              <textarea class="output" id="finalPrompt"></textarea>
+            </div>
+
+            <div class="labels-box" id="labelsBox">
+              <!-- labels get injected here -->
+            </div>
+          </div>
+
+          <div class="output-bottom pinterest-row">
+            <input type="text" id="pinterestSearch" placeholder="Search query for Pinterest"/>
+            <button
+              onclick="window.open('https://www.pinterest.com/search/pins/?q=' + encodeURIComponent(document.getElementById('pinterestSearch').value))">
+              Open in Pinterest
+            </button>
+          </div>
+        </div>
+      </div>
+
+
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.0/jszip.min.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+      <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.2/papaparse.min.js"></script>
+
+
+      <script>
+
+        
+let currentTemplateRawText = "";
+let activeTemplateMode = true;
+
+let cachedTemplateData = null;
+
+
+
+
+
+
+
+      document.getElementById("openCustomGPT").addEventListener("click", function () {
+const prompt = document.getElementById("finalPrompt").value.trim();
+if (!prompt) {
+alert("Prompt is empty!");
+return;
+}
+
+// Copy to clipboard first
+navigator.clipboard.writeText(prompt).then(() => {
+const customGPTURL = "https://chat.openai.com/g/g-68512d8ce4208191b216c8344e406aea-design-brief-testing";
+window.open(customGPTURL, "_blank");
+alert("✅ Prompt copied to clipboard. Just paste (Ctrl+V) into the chat.");
+}).catch(() => {
+alert("❌ Failed to copy prompt. Please copy it manually.");
+});
+});
+
+  
+
+
+
+
+
+    const finalPrompt = document.getElementById('finalPrompt');
+    const formSection = document.querySelector('.scrollable-form');
+    // const Section = document.querySelector('.labels-box');
+
+    let isManuallyEdited = false;
+    let typingTimeout;
+
+    finalPrompt.addEventListener('input', () => {
+      isManuallyEdited = true;
+      formSection.classList.add('grayed-out');
+      Section.classList.add('grayed-out'); // for the right side as well
+
+      clearTimeout(typingTimeout);
+      typingTimeout = setTimeout(() => {
+        formSection.classList.remove('grayed-out');
+      }, 2000000); // Remove grey after 2 seconds of no typing
+
+
+    });
+
+
+      function normalizeId(name) {
+        return name.replace(/\s+/g, '').toLowerCase();
+      }
+        
+      // 1. Sheet URLs
+const sheetURL_FORM = 'https://docs.google.com/spreadsheets/d/1TtxfPpIIYBjzP32-9n9snZbNoCU69mSvYVbA3uAgGcY/export?format=csv';
+const sheetURL_TEMPLATE = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vS8DDK08xnsONPfWNlQxcCiRdy-Tr0yIbPUp1cYukz2J4pSOZnCR2_JZaFha5cP6cLirgzaWBp0aI7O/pub?output=csv';
+
+// 2. Fetch CSV helpers
+async function loadFormSheet() {
+  const cacheBuster = `&_=${Date.now()}`;
+  const response = await fetch(sheetURL_FORM + cacheBuster);
+  const csvText = await response.text();
+  const parsed = Papa.parse(csvText, { header: false });
+  return parsed.data;
+}
+
+async function loadTemplateSheet() {
+  const cacheBuster = `&_=${Date.now()}`;
+  const response = await fetch(sheetURL_TEMPLATE + cacheBuster);
+  const csvText = await response.text();
+  const parsed = Papa.parse(csvText, { header: false });
+  return parsed.data;
+}
+
+
+// 3. Build form UI
+function buildForm(data) {
+  const parentHeaders = data[0];
+  const childHeaders = data[1];
+  const contentRows = data.slice(2);
+
+  const grouped = {};
+  childHeaders.forEach((child, i) => {
+    const parent = parentHeaders[i]?.trim();
+    if (!parent || !child) return;
+    if (!grouped[parent]) grouped[parent] = [];
+    grouped[parent].push({ name: child.trim(), index: i });
+  });
+
+  const container = document.getElementById('formContainer');
+
+  for (const [parent, children] of Object.entries(grouped)) {
+    const group = document.createElement('div');
+    group.className = 'form-group';
+
+    const header = document.createElement('div');
+    header.className = 'form-card-header collapsible-header';
+    header.innerHTML = `${parent} <span class="toggle-icon" style="float:right;cursor:pointer;">&#x25B2;</span>`;
+
+    const contentWrapper = document.createElement('div');
+    contentWrapper.className = 'collapsible-content';
+    contentWrapper.style.display = 'none';
+
+    header.addEventListener('click', () => {
+      const isVisible = contentWrapper.style.display !== 'none';
+      contentWrapper.style.display = isVisible ? 'none' : 'block';
+      const icon = header.querySelector('.toggle-icon');
+      icon.innerHTML = isVisible ? '&#x25B2;' : '&#x25BC;';
+    });
+
+    group.appendChild(header);
+    group.appendChild(contentWrapper);
+
+    children.forEach(({ name, index }) => {
+      const label = document.createElement('label');
+      label.setAttribute('for', name);
+      label.textContent = name;
+
+      const id = normalizeId(name);
+      const allValues = contentRows.map(row => row[index]?.trim()).filter(v => !!v);
+      const uniqueOptions = [...new Set(allValues)];
+
+      let fieldElement;
+
+      if (uniqueOptions.length === 0) {
+        const textarea = document.createElement('textarea');
+        textarea.id = id;
+        textarea.rows = 4;
+        textarea.placeholder = 'Enter value here';
+        textarea.addEventListener('input', () => {
+          generatePrompt();
+          updateStructuredView();
+        });
+
+
+
+        contentWrapper.appendChild(label);
+        fieldElement = textarea;
+      } else {
+        const searchWrapper = document.createElement('div');
+        searchWrapper.classList.add('search-wrapper');
+
+        const searchInput = document.createElement('input');
+        searchInput.type = 'text';
+        searchInput.placeholder = 'Search...';
+        searchInput.classList.add('dropdown-search');
+
+        const select = document.createElement('select');
+        select.id = id;
+        select.multiple = true;
+        select.style.marginTop = '0.5rem';
+
+        uniqueOptions.forEach(value => {
+          const opt = document.createElement('option');
+          opt.value = value;
+          opt.textContent = value;
+          select.appendChild(opt);
+        });
+
+        searchInput.addEventListener('input', () => {
+          const filter = searchInput.value.toLowerCase();
+          Array.from(select.options).forEach(opt => {
+            opt.style.display = opt.textContent.toLowerCase().includes(filter) ? '' : 'none';
+          });
+        });
+
+        select.addEventListener('change', () => {
+          moveSelectedOptionsToTop(select);
+          
+          updateStructuredView();
+          updatePinterestQuery();
+          if (activeTemplateMode) {
+    // re-fill placeholders in template
+    const textarea = document.getElementById("finalPrompt");
+    textarea.value = processPlaceholders(currentTemplateRawText);
+
+  } else {
+    // procedural generation
+    generatePrompt();
+  }
+
+        });
+
+        searchInput.addEventListener('keydown', event => {
+          if (event.key === 'Enter') {
+            event.preventDefault();
+            const inputValue = searchInput.value.trim();
+            if (!inputValue) return;
+
+            const exists = Array.from(select.options).some(option =>
+              option.text.toLowerCase() === inputValue.toLowerCase()
+            );
+
+            if (!exists) {
+              const newOption = new Option(inputValue, inputValue, false, true);
+              select.appendChild(newOption);
+            } else {
+              Array.from(select.options).forEach(option => {
+                if (option.text.toLowerCase() === inputValue.toLowerCase()) {
+                  option.selected = true;
+                }
+              });
+            }
+
+            searchInput.value = '';
+            moveSelectedOptionsToTop(select);
+            
+            updateStructuredView();
+            updatePinterestQuery();
+            if (activeTemplateMode) {
+    // re-fill placeholders in template
+    const textarea = document.getElementById("finalPrompt");
+    textarea.value = processPlaceholders(textarea.value);
+  } else {
+    // procedural generation
+    generatePrompt();
+  }
+
+          }
+        });
+
+        const topRow = document.createElement('div');
+        topRow.style.display = 'flex';
+        topRow.style.alignItems = 'center';
+        topRow.style.justifyContent = 'space-between';
+        topRow.style.marginTop = '15px';
+        topRow.style.gap = '1rem';
+
+        label.style.color = '#ccc';
+        label.style.fontWeight = 'bold';
+        label.style.flex = '1';
+
+        const inputWrapper = document.createElement('div');
+        inputWrapper.style.display = 'flex';
+        inputWrapper.style.flex = '1';
+        inputWrapper.style.gap = '6px';
+
+        searchInput.style.flex = '1';
+        searchInput.style.minWidth = '120px';
+        searchInput.style.padding = '6px 8px';
+        searchInput.style.border = '1px solid #444';
+        searchInput.style.borderRadius = '4px';
+        searchInput.style.background = '#222';
+        searchInput.style.color = '#fff';
+
+        inputWrapper.appendChild(searchInput);
+
+        topRow.appendChild(label);
+        topRow.appendChild(inputWrapper);
+
+        searchWrapper.appendChild(topRow);
+        searchWrapper.appendChild(select);
+
+        fieldElement = searchWrapper;
+      }
+
+      contentWrapper.appendChild(fieldElement);
+    });
+
+    container.appendChild(group);
+  }
+}
+
+
+
+function processPlaceholders(text) {
+  if (!text || !text.trim()) return "[No template loaded]";
+  
+  return text.replace(/\[([^\]]+)\]/g, (match, label) => {
+    const id = normalizeId(label);
+    const el = document.getElementById(id);
+    if (!el) {
+      console.warn(`⚠️ Placeholder [${label}] did not match any element with id="${id}"`);
+      return match;
+    }
+
+    if (el.tagName === "SELECT" && el.multiple) {
+      const selected = Array.from(el.selectedOptions).map(opt => opt.value.trim()).filter(Boolean);
+      return selected.join(", ") || match;
+    }
+    if (el.tagName === "TEXTAREA" || el.tagName === "INPUT") {
+      const val = el.value.trim();
+      return val || match;
+    }
+    return match;
+  });
+}
+
+
+
+
+
+
+
+
+
+
+
+
+// 4. Setup prompt templates
+function setupPromptTemplates(data) {
+  const headerRow = data[0];
+  const templateSelector = document.getElementById("templateSelector");
+  templateSelector.innerHTML = ""; // clear existing
+
+  // This array holds ONLY the non-empty templates
+  const promptTemplates = [];
+
+  headerRow.forEach((header, index) => {
+    const lines = data
+      .slice(1)
+      .map(row => row[index]?.trim())
+      .filter(line => !!line);
+
+    if (lines.length === 0) return; // skip empty columns
+
+    promptTemplates.push({
+      header,
+      lines
+    });
+
+    const option = document.createElement("option");
+    option.value = promptTemplates.length - 1; // index in promptTemplates
+    option.textContent = header;
+    templateSelector.appendChild(option);
+  });
+
+  // Default to first template
+  if (promptTemplates.length > 0) {
+    currentTemplateRawText = promptTemplates[0].lines.join("\n\n");
+    document.getElementById("finalPrompt").value = processPlaceholders(currentTemplateRawText);
+  } else {
+    currentTemplateRawText = "";
+    document.getElementById("finalPrompt").value = "[No template loaded]";
+  }
+
+  // Listen for template changes
+  templateSelector.addEventListener("change", function() {
+    activeTemplateMode = true; // template mode on
+    const selectedIndex = parseInt(this.value);
+    const selected = promptTemplates[selectedIndex];
+    currentTemplateRawText = selected.lines.join("\n\n");
+    document.getElementById("finalPrompt").value = processPlaceholders(currentTemplateRawText);
+  });
+}
+
+
+// 5. Main loader
+window.onload = async function () {
+  const formData = await loadFormSheet();
+  buildForm(formData);
+
+  const templateData = await loadTemplateSheet();
+  setupPromptTemplates(templateData);
+};
+
+    
+
+
+
+      document.getElementById('labelsBox').addEventListener('click', function (e) {
+        if (e.target.classList.contains('remove')) {
+          const tag = e.target.closest('.label-tag');
+          const field = tag.getAttribute('data-field');
+          const value = tag.getAttribute('data-value');
+          if (field && value) {
+            removeLabel(field, value);
+          }
+        }
+      });
+
+      function getLabelledImages() {
+        return Array.from(document.querySelectorAll('.preview-image-wrapper')).map(wrapper => {
+          const img = wrapper.querySelector('img');
+          const label = wrapper.querySelector('.image-label')?.innerText?.trim();
+          if (img && label) {
+            return { label, file: dataURLtoFile(img.src, `${label}.png`) };
+          }
+          return null;
+        }).filter(Boolean);
+      }
+
+
+
+      
+
+
+      function dataURLtoFile(dataurl, filename) {
+        const arr = dataurl.split(',');
+        const mime = arr[0].match(/:(.*?);/)[1];
+        const bstr = atob(arr[1]);
+        let n = bstr.length;
+        const u8arr = new Uint8Array(n);
+        while (n--) u8arr[n] = bstr.charCodeAt(n);
+        return new File([u8arr], filename, { type: mime });
+      }
+
+
+        async function exportToChatGPT() {
+        const prompt = document.getElementById('finalPrompt').value;
+        const wrappers = document.querySelectorAll('.preview-image-wrapper');
+
+          const labelled = Array.from(wrappers)
+            .filter(wrapper => wrapper.querySelector('.image-label') && wrapper.querySelector('img'))
+            .map(wrapper => {
+              const label = wrapper.querySelector('.image-label').textContent.trim();
+              const img = wrapper.querySelector('img');
+              const base64 = img.src.split(',')[1]; // Extract base64 only
+              return { label, base64 };
+            });
+
+          if (labelled.length === 0) {
+          // Proceed without images
+          const prompt = document.getElementById('finalPrompt').value;
+          const chatGPTURL = `https://chat.openai.com/?prompt=${encodeURIComponent(prompt)}`;
+          window.open(chatGPTURL, "_blank");
+          return;
+          }
+
+
+          const uploads = await Promise.all(labelled.map(async ({ label, base64 }) => {
+            try {
+              const res = await fetch("https://api.imgbb.com/1/upload", {
+                method: "POST",
+                body: new URLSearchParams({
+                  key: "e4440d61f8e0b97bfe979bf8995476c2", // your API key
+                  image: base64
+                })
+              });
+              const data = await res.json();
+              if (data.success) {
+                const url = data.data.url;
+                return `\n ${label} :${url}`;
+              } else {
+                return `**${label}**: (upload failed)`;
+              }
+            } catch (e) {
+              return `**${label}**: (upload error)`;
+            }
+          }));
+
+        const combinedPrompt = `${prompt}\n\n${uploads.join("\n\n")}`;
+        const chatGPTURL = `https://chat.openai.com/?prompt=${encodeURIComponent(combinedPrompt)}`;
+        window.open(chatGPTURL, "_blank");
+      }
+
+      // Normalize select options to keep selected at the top
+      function moveSelectedOptionsToTop(selectElement) {
+        const selected = Array.from(selectElement.selectedOptions);
+        const unselected = Array.from(selectElement.options).filter(opt => !opt.selected);
+
+        selectElement.innerHTML = '';
+
+        selected.forEach(opt => {
+          const o = new Option(opt.text, opt.value, false, true);
+          selectElement.appendChild(o);
+        });
+
+        unselected.forEach(opt => {
+          const o = new Option(opt.text, opt.value, false, false);
+          selectElement.appendChild(o);
+        });
+      }
+
+      // Hook moveSelectedOptionsToTop on all select changes
+      function attachMoveSelectedTop() {
+        document.querySelectorAll('select[multiple]').forEach(select => {
+          select.addEventListener('change', () => moveSelectedOptionsToTop(select));
+        });
+      }
+
+      // Ensure it's run after dynamic form generation
+      setTimeout(attachMoveSelectedTop, 1000);
+
+
+        function openInChatGPT() {
+        const prompt = document.getElementById('finalPrompt').value.trim();
+        if (!prompt) {
+          alert("Prompt is empty!");
+          return;
+        }
+        const encodedPrompt = encodeURIComponent(prompt);
+        const chatURL = `https://chat.openai.com/?model=text-davinci-003&prompt=${encodedPrompt}`;
+        window.open(chatURL, '_blank');
+      }
+
+        document.querySelectorAll('select, textarea').forEach(el => {
+        el.addEventListener('change', generatePrompt);
+      });
+
+      function updatePreviewPlaceholder() {
+        const hasImages = document.querySelectorAll('#canvas .preview-image-wrapper').length > 0;
+        document.getElementById('previewPlaceholder').style.display = hasImages ? 'none' : 'block';
+      }
+
+
+        
+        function getMultiSelect(id) {
+          return Array.from(document.getElementById(id)?.selectedOptions || []).map(opt => opt.value);
+        }
+
+        
+        
+    // function generatePrompt() {
+    //   const get = (label) => {
+    //     const el = document.getElementById(normalizeId(label));
+    //     if (!el) return '';
+    //     if (el.tagName === 'SELECT' && el.multiple) {
+    //     return Array.from(el.selectedOptions).map(opt => opt.value.trim()).join(' ');
+    //     }
+
+    //     if (el.tagName === 'TEXTAREA' || el.tagName === 'INPUT') {
+    //       return el.value.trim();
+    //     }
+    //     return '';
+    //   };
+    //   const budget = get('Budget');
+    //   const space = get('Space Type');
+    //   const business = get('Business type');
+    //   const occupancy = get('Occupancy');
+    //   const layout = get('Furniture Layout');
+    //   const design = get('Design Style');
+    //   const flooring = get('Flooring Type');
+    //   const ceiling = get('Ceiling Treatment');
+    //   const storage = get('StorageNeeds');
+    //   const brandColor = get('Brand Color');
+    //   const primaryColor = get('Primary Color');
+    //   const accentColor = get('Accent Color');
+    //   const primaryMat = get('Primary Material');
+    //   const accentMat = get('Accent Material');
+    //   const use = get('Intended Use Case');
+    //   const ambience = get('Ambience Preference');
+    //   const emotion = get('Emotion');
+    //   const biophilia = get('Biophilic Features');
+    //   const lighting = get('Lighting Type');
+    //   const lightingDetail = get('Lighting Elements');
+    //   const ambient = get('Ambience');
+    //   const designinf = get('Design Inference');
+
+    //   const lines = [];
+
+
+
+
+    // // Opening line (always shows something)
+
+    
+
+
+
+    // const formatList = (arr) => {
+    // if (arr.length === 1) return arr[0];
+    // if (arr.length === 2) return arr.join(' and ');
+    // return arr.slice(0, -1).join(', ') + ', and ' + arr[arr.length - 1];
+    // };
+
+    // const businessValues = getMultiSelect('businesstype');
+    // const spaceValues = getMultiSelect('spacetype');
+    // const designValues = getMultiSelect('designstyle');
+    // const flooringValues = getMultiSelect('flooringtype');
+    // const ceilingValues = getMultiSelect('ceilingtreatment');
+    // const storageValues = getMultiSelect('storageneeds');
+    // const primaryMatValues = getMultiSelect('primarymaterial');
+    // const accentMatValues = getMultiSelect('accentmaterial');
+    // const biophiliaValues = getMultiSelect('biophilicfeatures');
+    // const lightingValues = getMultiSelect('lightingtype');
+    // const lightingDetailValues = getMultiSelect('lightingelements');
+    // const useValues = getMultiSelect('intendedusecase');
+    // const emotionValues = getMultiSelect('emotion');
+    // const primaryColorValues = getMultiSelect('primarycolor');
+    // const accentColorValues = getMultiSelect('accentcolor');
+    // const budgetValues = getMultiSelect('budget');
+    // const occupancyValues = getMultiSelect('occupancy');
+
+
+
+    // // lines.push(`Open in Design Brief Testing CustomGPT`);
+
+    // if (budgetValues.length) {
+    // lines.push(`With a budget of ${formatList(budgetValues)} per sqft.`);
+    // }
+
+
+    // if (spaceValues.length && businessValues.length) {
+    // lines.push(`Create a photorealistic render of ${formatList(spaceValues)} designed for ${formatList(businessValues)} businesses.`);
+    // } else if (spaceValues.length) {
+    // lines.push(`Create a photorealistic render of ${formatList(spaceValues)}.`);
+    // } else if (businessValues.length) {
+    // lines.push(`${formatList(businessValues)} business.`);
+    // }
+
+    // else if (space) {
+    //   lines.push(`Create a photorealistic render of a ${space}`);
+    // } else if (business) {
+    //   lines.push(`${business} business.`);
+    // }
+
+
+
+    // // Occupancy + Layout handling
+    // if (occupancyValues.length && layout) {
+    // lines.push(`The space should accommodate approximately ${formatList(occupancyValues)} people with a ${layout}
+    // layout.`);
+    // } else if (occupancyValues.length) {
+    // lines.push(`The space should accommodate approximately ${formatList(occupancyValues)} people.`);
+    // }
+
+
+    // // Design style
+    // if (designValues.length) {
+    //   lines.push(`It reflects a ${formatList(designValues)} design sensibility.`);
+    // }
+
+    // // Flooring + Ceiling
+    // if (flooringValues.length && ceilingValues.length) {
+    //   lines.push(`Use ${formatList(flooringValues)} flooring and incorporate ${formatList(ceilingValues)} into the ceiling design.`);
+    // } else if (flooringValues.length) {
+    //   lines.push(`Use ${formatList(flooringValues)} flooring throughout the space.`);
+    // } else if (ceilingValues.length) {
+    //   lines.push(`Incorporate ${formatList(ceilingValues)} into the ceiling design.`);
+    // }
+
+    // // Storage
+    // if (storageValues.length) {
+    //   lines.push(`If needed, include ${formatList(storageValues)} that supports the space's function.`);
+    // }
+
+    // // Colors + Materials
+    // const hasColorMaterial = brandColor || primaryColor || accentColor || primaryMatValues.length || accentMatValues.length;
+    // if (hasColorMaterial) {
+    //   let colorLine = 'Incorporate brand-aligned visual direction';
+    //   if (brandColor) colorLine += ` considering ${brandColor} as the brand color`;
+    //   if (primaryColorValues.length) colorLine += ` using ${formatList(primaryColorValues)} as primary color`;
+    //   if (accentColorValues.length) colorLine += ` and ${formatList(accentColorValues)} for the accents`;
+    //   if (primaryMatValues.length || accentMatValues.length) {
+    //     colorLine += ', and apply';
+    //     if (primaryMatValues.length) colorLine += ` ${formatList(primaryMatValues)} as primary`;
+    //     if (accentMatValues.length) colorLine += ` and ${formatList(accentMatValues)} as accent material`;
+    //     colorLine += ' across key surfaces and furniture';
+    //   }
+    //   colorLine += '.';
+    //   lines.push(colorLine);
+    // }
+
+    // // Use + Ambience + Emotion
+    // if (useValues.length || ambience || emotionValues.length) {
+    // let line = 'The intended use case is ';
+    // line += useValues.length ? formatList(useValues) : '[Intended Use Case]';
+    // if (ambience) line += `, and the visual ambience should feel ${ambience}`;
+    // if (emotionValues.length) line += `, conveying a sense of ${formatList(emotionValues)} tone`;
+    // line += '.';
+    // lines.push(line);
+    // }
+
+
+    // // Biophilic Features + Lighting Types + Lighting Elements
+    // if (biophiliaValues.length || lightingValues.length || lightingDetailValues.length) {
+    //   let line = 'If possible, include';
+    //   if (biophiliaValues.length) line += ` ${formatList(biophiliaValues)}`;
+    //   if (lightingValues.length) line += ` and ensure lighting is handled through ${formatList(lightingValues)}`;
+    //   if (lightingDetailValues.length) line += ` with details like ${formatList(lightingDetailValues)}`;
+    //   line += '.';
+    //   lines.push(line);
+    // }
+
+
+    // // Final ambience reinforcement
+    // if (ambient) {
+    //   lines.push(`Respect the overall ambience target: ${ambient}.`);
+    // }
+
+    // if (designinf) {
+    //   lines.push(`In terms of the overall understanding of design, i think ${designinf}.`);
+    // }
+
+    // // Optional: Guard against overwriting if manually edited
+    // if (!isManuallyEdited) {
+    //   document.getElementById('finalPrompt').value = lines.join('\n\n');
+    // }
+
+
+    //   lines.push(`Do not invent or alter design directions beyond what’s stated. Keep the tone brand-aligned and visually consistent with the defined parameters.`);
+
+    //   if (!isManuallyEdited) {
+    //     document.getElementById('finalPrompt').value = lines.join('\n\n');
+    //   }
+    // }
+
+      setTimeout(() => {
+        document.querySelectorAll('select[multiple]').forEach(select => {
+          select.addEventListener('change', generatePrompt);
+        });
+      }, 500); // slight delay to wait for selects to render
+
+
+      function updateStructuredView() {
+        const groupedContainer = document.getElementById('labelsBox');
+        groupedContainer.innerHTML = '';
+
+        const formGroups = document.querySelectorAll('.form-group');
+        formGroups.forEach(group => {
+          const header = group.querySelector('div');
+          if (!header) return;
+          const groupTitle = header.childNodes[0].textContent.trim();
+          const fields = group.querySelectorAll('select, textarea');
+
+          const selectedValues = [];
+          fields.forEach(el => {
+            const fieldId = el.id;
+            if (el.tagName === 'SELECT' && el.multiple) {
+              Array.from(el.selectedOptions).forEach(opt => {
+                selectedValues.push({ field: fieldId, value: opt.value.trim() });
+              });
+            } else if ((el.tagName === 'TEXTAREA' || el.tagName === 'INPUT') && el.value.trim()) {
+              selectedValues.push({ field: fieldId, value: el.value.trim() });
+            }
+          });
+
+          if (selectedValues.length === 0) return;
+
+          const section = document.createElement('div');
+          section.classList.add('form-card');
+
+          const title = document.createElement('div');
+          title.classList.add('form-card-header');
+
+          // Create Pinterest icon
+          const pinterestIcon = document.createElement('i');
+          pinterestIcon.className = 'fa-brands fa-pinterest';
+          pinterestIcon.style.cursor = 'pointer';
+          pinterestIcon.style.float = 'right';
+          pinterestIcon.title = 'Search on Pinterest';
+          pinterestIcon.style.color = '#E60023';
+          pinterestIcon.style.fontSize = '20px';
+
+          // Attach event to open Pinterest
+          pinterestIcon.addEventListener('click', () => {
+          const tagElements = section.querySelectorAll('.label-tag');
+          const terms = Array.from(tagElements).map(tag => tag.textContent.replace('×', '').trim());
+          const searchQuery = terms.join(' ');
+          const pinterestURL = `https://www.pinterest.com/search/pins/?q=${encodeURIComponent(searchQuery)}`;
+          window.open(pinterestURL, '_blank');
+          });
+
+          title.textContent = groupTitle;
+          title.appendChild(pinterestIcon); // Append icon to title
+          section.appendChild(title);
+
+
+          selectedValues.forEach(({ field, value }) => {
+          const tag = document.createElement('span');
+          tag.className = 'label-tag';
+          tag.setAttribute('data-field', normalizeId(field));
+          tag.setAttribute('data-value', value);
+          tag.innerHTML = `${value} <span class="remove" style="cursor:pointer;">×</span>`;
+          section.appendChild(tag);
+          });
+
+          groupedContainer.appendChild(section);
+        });
+      }
+        
+      
+      function removeSelection(fieldId, value) {
+      const el = document.getElementById(fieldId);
+      if (!el) return;
+
+      if (el.tagName === 'SELECT') {
+      Array.from(el.options).forEach(opt => {
+      if (opt.value === value) opt.selected = false;
+      });
+      } else if (el.tagName === 'TEXTAREA') {
+      if (el.value.trim() === value) el.value = '';
+      }
+
+      
+      updateStructuredView();
+      updatePinterestQuery();
+      if (activeTemplateMode) {
+    // re-fill placeholders in template
+    if (activeTemplateMode) {
+  const textarea = document.getElementById("finalPrompt");
+  textarea.value = processPlaceholders(currentTemplateRawText);
+} else {
+  generatePrompt();
+}
+  } else {
+    // procedural generation
+    generatePrompt();
+  }
+
+}
+
+      
+      function copyToClipboard() {
+          const text = document.getElementById('finalPrompt').value;
+          navigator.clipboard.writeText(text).then(() => alert('Copied!'));
+        }
+          const scrollableForm = document.querySelector('.scrollable-form');
+          
+          const outputSection = document.querySelector('.output-section');
+        
+          // outputSection.addEventListener('wheel', function (e) {
+          //   if (scrollableForm) {
+          //     scrollableForm.scrollBy({
+          //       top: e.deltaY,
+          //       behavior: 'auto'
+          //     });
+          //   }
+          //   e.preventDefault(); // prevent scroll on right side
+          // }, { passive: false });
+
+          const canvas = document.getElementById('canvas');
+          let scale = 1;
+          let isDraggingCanvas = false;
+          let canvasOffsetX = 0, canvasOffsetY = 0, dragStartX = 0, dragStartY = 0;
+        
+
+      async function handleSearch(selectElement, context) {
+      
+        }
+        
+        function updateLabels() {
+        const keys =
+        ['officeSpaceType','intendedUse','designStyle','people','furniture','materials','accentMaterials','primaryColor','accentColors','lightingType','lightingElements'];
+        const labelsBox = document.getElementById('labelsBox');
+        labelsBox.innerHTML = '';
+        keys.forEach(id => {
+        const el = document.getElementById(id);
+        let values = [];
+
+        if (el.tagName === 'SELECT' && el.multiple) {
+        values = Array.from(el.selectedOptions).map(opt => opt.value); // ordered
+        } else {
+        values = [el.value];
+        }
+        values.forEach(val => {
+        if (val && val.trim()) {
+        const span = document.createElement('span');
+        span.className = 'label-tag label-' + id;
+        span.setAttribute('data-field', id);
+        span.setAttribute('data-value', val);
+        span.innerHTML = `${val}<span class="remove" style="margin-left:8px;cursor:pointer;">×</span>`;
+        labelsBox.appendChild(span);
+
+
+
+        }
+        });
+        });
+
+        }
+
+        function updatePinterestSearchInput() {
+          const allLabels = document.querySelectorAll('.right-panel .label-group .label span');
+          const keywords = Array.from(allLabels).map(el => el.textContent.trim()).join(' ');
+          document.querySelector('#searchBoxContainer input').value = keywords;
+    }
+
+      function removeLabel(id, value) {
+  const el = document.getElementById(normalizeId(id));
+  if (!el) return;
+
+  if (el.tagName === 'SELECT' && el.multiple) {
+    Array.from(el.options).forEach(opt => {
+      if (opt.value === value) opt.selected = false;
+    });
+  } else if (el.tagName === 'TEXTAREA') {
+    if (el.value.trim() === value) el.value = '';
+  }
+
+  updateStructuredView();
+  updatePinterestQuery();
+
+  if (activeTemplateMode) {
+    const textarea = document.getElementById("finalPrompt");
+    textarea.value = processPlaceholders(currentTemplateRawText);
+  } else {
+    generatePrompt();
+  }
+}
+
+    
+    function updatePinterestQuery() {
+    const getValueByLabel = (labelText) => {
+    const id = normalizeId(labelText);
+    const el = document.getElementById(id);
+    if (!el) return [];
+
+    if (el.tagName === 'SELECT' && el.multiple) {
+    return Array.from(el.selectedOptions).map(opt => opt.value.trim()).filter(Boolean);
+    }
+
+    if (el.tagName === 'TEXTAREA') {
+    const val = el.value.trim();
+    return val ? [val] : [];
+    }
+
+    return [];
+    };
+
+    // Get multi-value arrays
+    const business = getValueByLabel('Business type');
+    const space = getValueByLabel('Space type');
+    const brandcolor = getValueByLabel('Brand Color');
+    const ambience = getValueByLabel('Ambience Preference');
+    const emotion = getValueByLabel('Emotion');
+    const accent = getValueByLabel('Accent Color');
+    const primary = getValueByLabel('Primary Material');
+    const accentMat = getValueByLabel('Accent Material');
+    const lightingElements = getValueByLabel('Lighting Elements');
+    const flooring = getValueByLabel('Flooring Type');
+    const ceiling = getValueByLabel('Ceiling Treatment');
+    const design = getValueByLabel('Design Style');
+    const office = getValueByLabel('Office Space Type');
+    const color = getValueByLabel('Primary Color');
+    const lighting = getValueByLabel('Lighting Type');
+
+    const parts = [];
+
+    // Compose style + space combinations
+    if (design.length && office.length) {
+    design.forEach(d => {
+    office.forEach(o => {
+    parts.push(`${d} style ${o}`);
+    });
+    });
+    } else if (design.length) {
+    parts.push(...design.map(d => `${d} interior`));
+    } else if (office.length) {
+    parts.push(...office.map(o => `${o} space`));
+    }
+
+    // Append individual fields
+    parts.push(...business);
+    parts.push(...space);
+    parts.push(...emotion);
+    parts.push(...ambience);
+    parts.push(...color);
+    parts.push(...brandcolor);
+    parts.push(...lighting);
+    parts.push(...lightingElements);
+    parts.push(...flooring);
+    parts.push(...ceiling);
+    parts.push(...primary);
+    parts.push(...accentMat);
+    parts.push(...accent);
+
+    // Final Pinterest query string
+    const searchBox = document.getElementById('pinterestSearch');
+    if (parts.length === 0) {
+    searchBox.value = 'photorealistic office interior inspiration';
+    } else {
+    searchBox.value = parts.join(' ');
+    }
+    }
+
+
+    // function updatePinterestQuery() {
+    //   const getValueByLabel = (labelText) => {
+    //   const id = normalizeId(labelText);
+    //   const el = document.getElementById(id);
+    //   if (!el) return [];
+
+    //   if (el.tagName === 'SELECT' && el.multiple) {
+    //   return Array.from(el.selectedOptions).map(opt => opt.value.trim()).filter(Boolean);
+    //   }
+
+    //   if (el.tagName === 'TEXTAREA') {
+    //   const val = el.value.trim();
+    //   return val ? [val] : [];
+    //   }
+
+    //   return [];
+    //   };
+
+
+    //   const business = getValueByLabel('Business type');
+    //   const brandcolor = getValueByLabel('Brand Color');
+    //   const ambience = getValueByLabel('Ambience Preference');
+    //   const emotion = getValueByLabel('Emotion');
+    //   const accent = getValueByLabel('Accent Color');
+    //   const primary = getValueByLabel('Primary Material');
+    //   const accentMat = getValueByLabel('Accent Material');
+    //   const lightingElements = getValueByLabel('Lighting Elements');
+    //   const flooring = getValueByLabel('Flooring Type');
+    //   const ceiling = getValueByLabel('Ceiling Treatment');
+    //   const design = getValueByLabel('Design Style');
+    //   const office = getValueByLabel('Office Space Type');
+    //   const color = getValueByLabel('Primary Color');
+    //   const lighting = getValueByLabel('Lighting Type');
+
+    //   const parts = [];
+
+    //   if (design && office) {
+    //     parts.push(`${design} ${office}`);
+    //   } else if (design) {
+    //     parts.push(`${design}`);
+    //   } else if (office) {
+    //     parts.push(`${office}`);
+    //   }
+
+    //   if (business) parts.push(`${business}`);
+    //   if (emotion) parts.push(`${emotion}`);
+    //   if (ambience) parts.push(`${ambience}`);
+    //   if (color) parts.push(`${color}`);
+    //   if (brandcolor) parts.push(`${brandcolor}`);
+    //   if (lighting) parts.push(`${lighting}`);
+    //   if (lightingElements) parts.push(`${lightingElements}`);
+    //   if (flooring) parts.push(`${flooring}`);
+    //   if (ceiling) parts.push(`${ceiling}`);
+    //   if (primary) parts.push(`${primary}`);
+    //   if (accentMat) parts.push(`${accentMat}`);
+    //   if (accent) parts.push(`${accent}`);
+
+    //   const searchBox = document.getElementById('pinterestSearch');
+    //   if (parts.length === 0) {
+    //     searchBox.value = 'photorealistic office interior inspiration';
+    //   } else {
+    //     searchBox.value = parts.join(' ');
+    //   }
+    // }
+
+  document.querySelectorAll('select, textarea').forEach(el => {
+  if (el.id === 'finalPrompt') return;
+
+  el.addEventListener('change', () => {
+    if (activeTemplateMode) {
+      const textarea = document.getElementById("finalPrompt");
+      textarea.value = processPlaceholders(currentTemplateRawText);
+    } else {
+      generatePrompt();
+    }
+    updateStructuredView();
+    updatePinterestQuery();
+  });
+
+  if (el.tagName === 'TEXTAREA') {
+    el.addEventListener('input', () => {
+      if (activeTemplateMode) {
+        const textarea = document.getElementById("finalPrompt");
+        textarea.value = processPlaceholders(currentTemplateRawText);
+      } else {
+        generatePrompt();
+      }
+      updateStructuredView();
+      updatePinterestQuery();
+    });
+  }
+});
+
+    const observer = new MutationObserver(() => {
+  updatePinterestQuery(); // ✅ This will regenerate the search string correctly
+});
+
+
+const rightPanel = document.querySelector('.right-panel');
+  if (rightPanel) {
+    observer.observe(rightPanel, {
+    childList: true,
+    subtree: true
+  });
+}
+
+
+
+
+
+      </script>
+
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+
+
+        
+      </body>
+      </html>
