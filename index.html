@@ -393,7 +393,15 @@
         border-bottom: 2px solid #555; /* Draw the horizontal line */
       }
 
+      
 
+
+      .form-card-header {
+      font-weight: bold;
+      font-size: 20px;
+      margin-bottom: 0.5rem;
+      color: #ccc;
+      }
 
 
       label {
@@ -402,6 +410,7 @@
         margin-bottom: 0.5rem;
         font-weight: bold;
         color: #ccc;
+        font-size: 20px;
       }
 
       select[multiple] {
@@ -434,6 +443,8 @@
     gap: 0.3rem;
     }
 
+    
+
     .form-card-header i.fa-pinterest {
     margin-left: 8px;
     transition: transform 0.2s ease;
@@ -442,6 +453,83 @@
     .form-card-header i.fa-pinterest:hover {
     transform: scale(1.2);
     }
+
+
+    .collapsible-header {
+    font-weight: bold;
+    font-size: 22px;
+    cursor: pointer;
+    color: #ccc;
+    border-bottom: 2px solid #555;
+    padding-bottom: 1rem;
+    }
+
+
+
+.toggle-icon {
+  font-size: 16px;
+  transition: transform 0.2s ease;
+}
+
+.collapsible-content {
+  margin-top: 0.75rem;
+}
+
+.toggle-icon {
+  color: grey; /* 🌟 Teal or use #FFD700 for gold */
+  font-size: 20px;
+  transition: transform 0.2s ease;
+}
+
+.btn {
+  background-color: #00a67e;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-left: 10px;
+}
+
+.label-tag {
+  padding: 0.5rem 0.75rem;
+  border-radius: 16px;
+  font-size: 14px;
+  background-color: #666;
+  color: white;
+  display: inline-block;
+  margin: 0.25rem;
+  max-width: 220px;
+  word-break: break-word;
+  line-height: 1.3;
+  cursor: pointer;              /* 👈 ADD THIS */
+  transition: background-color 0.2s ease;
+}
+
+.label-tag:hover {
+  background-color: #888;       /* Optional hover effect */
+}
+
+
+
+.label-tag:not(.remove) {
+  cursor: pointer;
+}
+
+
+
+
+
+
+.button-group {
+  display: flex;
+  gap: 1rem;
+  display: flex;
+  justify-content: flex-start; /* 👈 All buttons start from the left */
+  gap: 1rem;       
+  margin-right: 2rem;
+}
+
 
 
 
@@ -461,6 +549,29 @@
               style="background: #10a37f; color: white; padding: 0.5rem 1rem; border-radius: 6px;">
               Open in ChatGPT
             </button>
+            <!-- New Button: View in Custom GPT -->
+            <!-- <button id="openCustomGPT">View in Custom GPT</button> -->
+             <div class="button-group">
+             <button id="openCustomGPT">Design Brief GPT</button>
+             <button id="moodboardgpt">Moodboard GPT</button>
+             </div>
+
+<!-- <script>
+  document.getElementById("viewCustomGPT").addEventListener("click", function () {
+  const prompt = document.getElementById("finalPrompt").value.trim();
+  if (!prompt) {
+    alert("Prompt is empty!");
+    return;
+  }
+
+  sessionStorage.setItem("autoPrompt", prompt);  // ✅ sessionStorage works better across tabs for extensions
+
+  window.open("https://chatgpt.com/g/g-68512d8ce4208191b216c8344e406aea-design-brief-testing", "_blank");
+});
+
+</script> -->
+
+
           </div>
 
           <div class="output-main">
@@ -491,9 +602,47 @@
 
       <script>
 
+      document.getElementById("openCustomGPT").addEventListener("click", function () {
+const prompt = document.getElementById("finalPrompt").value.trim();
+if (!prompt) {
+alert("Prompt is empty!");
+return;
+}
+
+// Copy to clipboard first
+navigator.clipboard.writeText(prompt).then(() => {
+const customGPTURL = "https://chat.openai.com/g/g-68512d8ce4208191b216c8344e406aea-design-brief-testing";
+window.open(customGPTURL, "_blank");
+alert("✅ Prompt copied to clipboard. Just paste (Ctrl+V) into the chat.");
+}).catch(() => {
+alert("❌ Failed to copy prompt. Please copy it manually.");
+});
+});
+
+  
+      document.getElementById("moodboardgpt").addEventListener("click", function () {
+const prompt = document.getElementById("finalPrompt").value.trim();
+if (!prompt) {
+alert("Prompt is empty!");
+return;
+}
+
+// Copy to clipboard first
+navigator.clipboard.writeText(prompt).then(() => {
+const customGPTURL = "https://chatgpt.com/g/g-685d46734f708191a9f3e33e1a5f1be3-materialboard-creator";
+window.open(customGPTURL, "_blank");
+alert("✅ Prompt copied to clipboard. Just paste (Ctrl+V) into the chat.");
+}).catch(() => {
+alert("❌ Failed to copy prompt. Please copy it manually.");
+});
+});
+
+
+
+
     const finalPrompt = document.getElementById('finalPrompt');
     const formSection = document.querySelector('.scrollable-form');
-    const Section = document.querySelector('.labels-box');
+    // const Section = document.querySelector('.labels-box');
 
     let isManuallyEdited = false;
     let typingTimeout;
@@ -511,7 +660,6 @@
 
     });
 
-      // 
 
       function normalizeId(name) {
         return name.replace(/\s+/g, '').toLowerCase();
@@ -541,18 +689,39 @@
         const container = document.getElementById('formContainer');
 
         for (const [parent, children] of Object.entries(grouped)) {
-          const group = document.createElement('div');
-          group.className = 'form-group';
+        const group = document.createElement('div');
+        group.className = 'form-group';
 
-          const header = document.createElement('h3');
-          header.textContent = parent;
-          group.appendChild(header);
+        const header = document.createElement('div');
+        header.className = 'form-card-header collapsible-header';
+        header.innerHTML = `${parent} <span class="toggle-icon"
+          style="float:right;cursor:pointer;">&#x25B2;</span>`; // Down arrow 
+
+        const contentWrapper = document.createElement('div');
+        contentWrapper.className = 'collapsible-content';
+        contentWrapper.style.display = 'none'; // 🔻 Hide by default
+
+
+        // Toggle collapse on click
+        header.addEventListener('click', () => {
+        const isVisible = contentWrapper.style.display !== 'none';
+        contentWrapper.style.display = isVisible ? 'none' : 'block';
+
+        const icon = header.querySelector('.toggle-icon');
+        icon.innerHTML = isVisible ? '&#x25B2;' : '&#x25BC;'; // ▲ or ▼
+
+        });
+
+        group.appendChild(header);
+        group.appendChild(contentWrapper);
+
 
           children.forEach(({ name, index }) => {
         const label = document.createElement('label');
         label.setAttribute('for', name);
         label.textContent = name;
-        group.appendChild(label);
+        contentWrapper.appendChild(label);
+
 
         const id = normalizeId(name);
         const allValues = contentRows.map(row => row[index]?.trim()).filter(v => !!v);
@@ -723,7 +892,8 @@
     }
 
 
-        group.appendChild(fieldElement);
+        contentWrapper.appendChild(fieldElement);
+
 
 
         
@@ -742,15 +912,27 @@
 
 
       document.getElementById('labelsBox').addEventListener('click', function (e) {
-        if (e.target.classList.contains('remove')) {
-          const tag = e.target.closest('.label-tag');
-          const field = tag.getAttribute('data-field');
-          const value = tag.getAttribute('data-value');
-          if (field && value) {
-            removeLabel(field, value);
-          }
-        }
-      });
+  const tag = e.target.closest('.label-tag');
+  if (!tag) return;
+
+  // If remove button clicked
+  if (e.target.classList.contains('remove')) {
+    const field = tag.getAttribute('data-field');
+    const value = tag.getAttribute('data-value');
+    if (field && value) {
+      removeLabel(field, value);
+    }
+    return;
+  }
+
+  // Else, tag body clicked: Open Pinterest
+  const value = tag.getAttribute('data-value');
+  if (value) {
+    const pinterestURL = `https://www.pinterest.com/search/pins/?q=${encodeURIComponent(value)}`;
+    window.open(pinterestURL, '_blank');
+  }
+});
+
 
       function getLabelledImages() {
         return Array.from(document.querySelectorAll('.preview-image-wrapper')).map(wrapper => {
@@ -954,6 +1136,10 @@
     const budgetValues = getMultiSelect('budget');
     const occupancyValues = getMultiSelect('occupancy');
 
+
+
+    // lines.push(`Open in Design Brief Testing CustomGPT`);
+
     if (budgetValues.length) {
     lines.push(`With a budget of ${formatList(budgetValues)} per sqft.`);
     }
@@ -1077,9 +1263,9 @@
 
         const formGroups = document.querySelectorAll('.form-group');
         formGroups.forEach(group => {
-          const header = group.querySelector('h3');
+          const header = group.querySelector('div');
           if (!header) return;
-          const groupTitle = header.textContent.trim();
+          const groupTitle = header.childNodes[0].textContent.trim();
           const fields = group.querySelectorAll('select, textarea');
 
           const selectedValues = [];
@@ -1137,7 +1323,27 @@
           groupedContainer.appendChild(section);
         });
       }
-        function copyToClipboard() {
+        
+      
+      function removeSelection(fieldId, value) {
+      const el = document.getElementById(fieldId);
+      if (!el) return;
+
+      if (el.tagName === 'SELECT') {
+      Array.from(el.options).forEach(opt => {
+      if (opt.value === value) opt.selected = false;
+      });
+      } else if (el.tagName === 'TEXTAREA') {
+      if (el.value.trim() === value) el.value = '';
+      }
+
+      generatePrompt();
+      updateStructuredView();
+      updatePinterestQuery();
+}
+
+      
+      function copyToClipboard() {
           const text = document.getElementById('finalPrompt').value;
           navigator.clipboard.writeText(text).then(() => alert('Copied!'));
         }
