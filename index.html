@@ -9,13 +9,14 @@
         <style>
           body {
             font-family: Arial, sans-serif;
-            font-size: 18px;
+            /* font-size: 18px; */
             padding: 1rem;
             background-color: #111;
             color: white;
             overflow: hidden;
           }
-      
+
+ 
       .container {
         display: flex;
         height: 100vh;
@@ -88,8 +89,8 @@
             border-radius: 5px;
             border: 1px solid #666;
             background: black;
-            color: white;
-            font-size: 16px;
+            color: #A2A2A2;
+            /* font-size: 16px; */
           }
           
 
@@ -161,17 +162,6 @@
         user-select: none;
       }
 
-      .preview-image-wrapper {
-        position: absolute;
-        width: 16px;
-        height: 16px;
-        right: 0;
-        bottom: 0;
-        background: white;
-        border: 1px solid #999;
-        cursor: nwse-resize;
-        z-index: 10;
-      }
 
       .resizer {
       position: absolute;
@@ -186,21 +176,7 @@
       }
 
 
-        .image-label {
-        position: absolute;
-        bottom: 4px;
-        left: 4px;
-        background: rgba(0,0,0,0.7);
-        color: white;
-        font-size: 13px;
-        padding: 2px 6px;
-        border-radius: 4px;
-        pointer-events: none;
-        }
 
-      .selected-image {
-        outline: 3px solid #6cb2eb;
-      }
 
 
       /* new */
@@ -219,7 +195,7 @@
         background-color: white;
         color: black;
         border-radius: 8px;
-        font-size: 16px;
+        /* font-size: 16px; */
       }
 
       .pinterest-row button {
@@ -238,7 +214,7 @@
         left: 50%;
         transform: translate(-50%, -50%);
         color: #aaa;
-        font-size: 16px;
+        /* font-size: 16px; */
         text-align: center;
         pointer-events: none;
         user-select: none;
@@ -275,7 +251,7 @@
       .label-tag {
         padding: 0.5rem 0.75rem;
         border-radius: 16px;
-        font-size: 14px;
+        /* font-size: 14px; */
         background-color: #666;
         color: white;
         display: inline-block;
@@ -302,7 +278,7 @@
 
       .form-card-header {
         font-weight: bold;
-        font-size: 16px;
+        /* font-size: 16px; */
         margin-bottom: 0.5rem;
         color: #ccc;
       }
@@ -321,9 +297,9 @@
         height: 100%;
         resize: none;
         /* padding: 1rem; */
-        font-size: 16px;
+        /* font-size: 16px; */
         background: black;
-        color: white;
+        color: #A2A2A2;
         border-radius: 8px;
         border: 1px solid #555;
         box-sizing: border-box;
@@ -376,7 +352,7 @@
       }
 
       .form-group {
-        margin-bottom: 1.5rem;
+        /* margin-bottom: 1.5rem; */
         background-color: #111;
         padding: 1rem;
         border: 1px solid #444;
@@ -386,9 +362,9 @@
       .form-group h3 {
         margin-top: 0.25rem;
         padding-bottom: 0.5rem;
-        font-size: 20px;
+        /* font-size: 20px; */
         font-weight: bold;
-        color: #fff;
+        color: #A2A2A2;
         margin-bottom: 1px;
         border-bottom: 2px solid #555; /* Draw the horizontal line */
       }
@@ -398,7 +374,7 @@
 
       .form-card-header {
       font-weight: bold;
-      font-size: 20px;
+      /* font-size: 20px; */
       margin-bottom: 0.5rem;
       color: #ccc;
       }
@@ -406,11 +382,11 @@
 
       label {
         display: block;
-        margin-top: 1rem;
+        /* margin-top: 1rem; */
         margin-bottom: 0.5rem;
         font-weight: bold;
         color: #ccc;
-        font-size: 20px;
+        /* font-size: 20px; */
       }
 
       select[multiple] {
@@ -418,7 +394,7 @@
         height: auto;
         padding: 0.5rem;
         background-color: black;
-        color: white;
+        color: #A2A2A2;
         border: 1px solid #666;
         border-radius: 5px;
       }
@@ -441,6 +417,7 @@
     display: flex;
     flex-direction: column;
     gap: 0.3rem;
+    color: #A2A2A2;
     }
 
     
@@ -457,9 +434,10 @@
 
     .collapsible-header {
     font-weight: bold;
-    font-size: 22px;
+    /* font-size: 22px; */
+    margin-top: 0.5rem;
     cursor: pointer;
-    color: #ccc;
+    color: white;
     border-bottom: 2px solid #555;
     padding-bottom: 1rem;
     }
@@ -494,7 +472,7 @@
 .label-tag {
   padding: 0.5rem 0.75rem;
   border-radius: 16px;
-  font-size: 14px;
+  /* font-size: 14px; */
   background-color: #666;
   color: white;
   display: inline-block;
@@ -530,8 +508,40 @@
   margin-right: 2rem;
 }
 
+/* Set the same font size across all text elements */
+*{
+  font-size: 14px ;
+}
+
+button {
+  font-size: 14px !important;
+}
+
+label {
+  color: #A2A2A2 !important;
+  margin-top: 1rem;
+}
+
+label + textarea {
+  margin-top: 0.75rem;
+  /* margin-bottom: 1rem; */
+  }
 
 
+element.style{
+margin-top: 0px;
+}
+
+.search-wrapper select {
+  margin-top: 0.5rem; /* or 0.75rem for more space */
+}
+
+
+.button-row button,
+.button-group button {
+  font-size: 12px !important; /* Or 11px if you want even smaller */
+  padding: 4px 10px;          /* Also reduce padding to shrink the button height */
+}
 
 
         </style>
@@ -552,8 +562,8 @@
             <!-- New Button: View in Custom GPT -->
             <!-- <button id="openCustomGPT">View in Custom GPT</button> -->
              <div class="button-group">
-             <button id="openCustomGPT">Design Brief GPT</button>
-             <button id="moodboardgpt">Moodboard GPT</button>
+             <button id="openCustomGPT" >Design Brief GPT</button>
+             <button id="moodboardgpt" >Moodboard GPT</button>
              </div>
 
 <!-- <script>
@@ -666,6 +676,7 @@ alert("❌ Failed to copy prompt. Please copy it manually.");
       }
         
       const sheetURL = 'https://docs.google.com/spreadsheets/d/1qXN1MR1pW3laS1wH_FI3vPblg3ANcqCMWVoGl0H7wek/export?format=csv';
+      // const sheetURL = 'https://docs.google.com/spreadsheets/d/1TtxfPpIIYBjzP32-9n9snZbNoCU69mSvYVbA3uAgGcY/export?format=csv';
 
       window.onload = async function () {
 
@@ -694,23 +705,29 @@ alert("❌ Failed to copy prompt. Please copy it manually.");
 
         const header = document.createElement('div');
         header.className = 'form-card-header collapsible-header';
-        header.innerHTML = `${parent} <span class="toggle-icon"
-          style="float:right;cursor:pointer;">&#x25B2;</span>`; // Down arrow 
+        header.innerHTML = `
+  ${parent}
+  <img 
+    src="data:image/png;base64,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" 
+    class="toggle-icon" 
+    style="float:right;cursor:pointer;width:16px;height:16px;transition:transform 0.2s ease;"
+  >`;
+
 
         const contentWrapper = document.createElement('div');
         contentWrapper.className = 'collapsible-content';
-        contentWrapper.style.display = 'none'; // 🔻 Hide by default
+        // contentWrapper.style.display = 'none'; // 🔻 Hide by default
 
 
         // Toggle collapse on click
         header.addEventListener('click', () => {
-        const isVisible = contentWrapper.style.display !== 'none';
-        contentWrapper.style.display = isVisible ? 'none' : 'block';
+  const isVisible = contentWrapper.style.display !== 'none';
+  contentWrapper.style.display = isVisible ? 'none' : 'block';
 
-        const icon = header.querySelector('.toggle-icon');
-        icon.innerHTML = isVisible ? '&#x25B2;' : '&#x25BC;'; // ▲ or ▼
+  const icon = header.querySelector('.toggle-icon');
+  icon.style.transform = isVisible ? 'rotate(0deg)' : 'rotate(180deg)';
+});
 
-        });
 
         group.appendChild(header);
         group.appendChild(contentWrapper);
@@ -734,6 +751,7 @@ alert("❌ Failed to copy prompt. Please copy it manually.");
       const textarea = document.createElement('textarea');
       textarea.setAttribute('id', id);
       textarea.setAttribute('rows', 4);
+      textarea.style.marginBottom = '0.75rem';
       textarea.placeholder = 'Enter value here';
       textarea.addEventListener('input', () => {
         generatePrompt();
@@ -840,7 +858,7 @@ alert("❌ Failed to copy prompt. Please copy it manually.");
     topRow.style.display = 'flex';
     topRow.style.alignItems = 'center';
     topRow.style.justifyContent = 'space-between';
-    topRow.style.marginTop = '15px';
+    // topRow.style.marginTop = '15px';
     topRow.style.gap = '1rem';
 
     // Create and style label
@@ -883,8 +901,16 @@ alert("❌ Failed to copy prompt. Please copy it manually.");
 
 
 
-    searchWrapper.appendChild(topRow); // Label + search in one row
-    searchWrapper.appendChild(select); // Dropdown below
+    searchWrapper.appendChild(topRow);
+
+// Wrap the select in a div to add spacing
+const selectWrapper = document.createElement('div');
+// selectWrapper.style.marginTop = '0.75rem'; // Adjust spacing here
+selectWrapper.style.marginBottom = '1rem';
+selectWrapper.appendChild(select);
+
+searchWrapper.appendChild(selectWrapper);
+
 
     fieldElement = searchWrapper;
 
@@ -1251,7 +1277,7 @@ alert("❌ Failed to copy prompt. Please copy it manually.");
     }
 
       setTimeout(() => {
-        document.querySelectorAll('select[multiple]').forEach(select => {
+        document.querySelectorAll('select[multiple]').forEach(select => { 
           select.addEventListener('change', generatePrompt);
         });
       }, 500); // slight delay to wait for selects to render
@@ -1306,8 +1332,32 @@ alert("❌ Failed to copy prompt. Please copy it manually.");
           window.open(pinterestURL, '_blank');
           });
 
+
+          const snapshotsIcon = document.createElement('i');
+          snapshotsIcon.className = 'fas fa-camera';
+          snapshotsIcon.style.cursor = 'pointer';
+          snapshotsIcon.style.float = 'right';
+          snapshotsIcon.title = 'Search on Office Snapshots';
+          snapshotsIcon.style.color = '#00B8D9';
+          snapshotsIcon.style.fontSize = '20px';
+
+          // Attach event to open Office Snapshots
+          snapshotsIcon.addEventListener('click', () => {
+          const tagElements = section.querySelectorAll('.label-tag');
+          const terms = Array.from(tagElements).map(tag => tag.textContent.replace('×', '').trim());
+          const joined = terms.join(' ');
+          const snapshotsURL = joined
+          ? `https://officesnapshots.com/photos/?filter_work-spaces=${encodeURIComponent(joined)}`
+          : 'https://officesnapshots.com/photos/';
+          window.open(snapshotsURL, '_blank');
+          snapshotsIcon.style.marginRight = '20px';
+          pinterestIcon.style.marginLeft = '10px';
+
+          });
+
           title.textContent = groupTitle;
           title.appendChild(pinterestIcon); // Append icon to title
+          // title.appendChild(snapshotsIcon);
           section.appendChild(title);
 
 
